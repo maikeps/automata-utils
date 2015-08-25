@@ -67,7 +67,15 @@ class Automaton:
 		for key in transition_aux:
 			transition[key] = transition_aux[key]
 
-		return transition
+
+		new_states = [key for key in transition]
+		new_accept_states = []
+		for state in transition:
+			for final_state in self.accept_states:
+				if final_state in state:
+					new_accept_states.append(state)
+
+		return Automaton(new_states, self.alphabet,	transition,	self.initial_state, new_accept_states)
 
 	def addState(self, new_state_arr, new_state_name, transition, transition_aux):
 		# Add the new transition, with empty info
@@ -106,4 +114,4 @@ accept_states = ['q2']
 
 automaton = Automaton(states, alphabet, transition, initial_state, accept_states);
 # print(automaton.verify_word('001010101010111000100000001'))
-print(automaton.determinize())
+print(automaton.determinize().accept_states)
