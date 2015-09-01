@@ -99,8 +99,53 @@ class Automaton:
 			if aux_str not in transition_aux:
 				self.addState(transition_aux[new_state_name][item], aux_str, transition, transition_aux)
 
+class Grammar:
+	def __init__(self, nonterminal, terminal, production, start_symbol):
+		self.nonterminal = nonterminal
+		self.terminal = terminal
+		self.production = production
+		self.inverse_prod = self.invert_production(production)
+		self.start_symbol = start_symbol
+
+	def invert_production(self, production):
+		inverse_prod = {}
+
+		for key in production:
+			prod = production[key]
+			for result in prod:
+				try:
+					inverse_prod[result].append(key)
+				except KeyError:
+					inverse_prod[result] = [key]
+
+		return inverse_prod
+
+	def reduce(self, word):#, depth = 0):
+		# aaabbb
+		# print(("\t"*depth)+word)
+
+		new_words = []
+		for key in self.inverse_prod:
+			if key in word:
+				for item in self.inverse_prod[key]:
+					reduced_word = word.replace(key, item)
+					if reduced_word != word:
+						new_words.append(reduced_word)
+		
+		depth += 1
+		for item in new_words:
+			if self.reduce(item, depth):
+				return True
+
+		return word == self.start_symbol
 
 
+
+	def replace(self, word, symbol, new_symbol):
+		return word.replace(symbol, new_symbol)
+
+
+# automaton
 states = ['q0', 'q1', 'q2', 'M']
 alphabet = ['0', '1']
 transition = {
@@ -112,6 +157,20 @@ transition = {
 initial_state = 'q0'
 accept_states = ['q2']
 
-automaton = Automaton(states, alphabet, transition, initial_state, accept_states);
+# grammar
+start_symbol = 'S'
+terminal = set(['a', 'b'])
+nonterminal = set(['S', 'A'])
+production = {
+	'S': ['A'],
+	'A': ['aAb', 'ab', 'B'],
+	'B': ['ab']
+}
+
+automaton = Automaton(states, alphabet, transition, initial_state, accept_states)
+grammar = Grammar(nonterminal, terminal, production, start_symbol)
+
+print(grammar.reduce('aaabbb'))
+
 # print(automaton.verify_word('001010101010111000100000001'))
-print(automaton.determinize().accept_states)
+# print(automaton.determinize().transition)
