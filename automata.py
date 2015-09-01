@@ -120,11 +120,36 @@ class Grammar:
 
 		return inverse_prod
 
-	def reduce(self, word):#, depth = 0):
-		# aaabbb
-		# print(("\t"*depth)+word)
+	def derive(self, state, word):
+		new_states = [state]
+		new_states_aux = []
 
+		print(state)
+
+		iteration_limit = 500
+
+		for i in range(iteration_limit):
+			for state_aux in new_states:
+				# generate next derivation step
+				for key in self.production:
+					for item in self.production[key]:
+						new_state = state_aux.replace(key, item)
+						if new_state != state_aux:
+							new_states_aux.append(new_state)
+							state = new_state
+							print(state)
+						if new_state == word:
+							return True
+
+			new_states = new_states_aux
+			new_states_aux = []
+
+
+		return False
+
+	def reduce(self, word):
 		new_words = []
+		
 		for key in self.inverse_prod:
 			if key in word:
 				for item in self.inverse_prod[key]:
@@ -170,7 +195,7 @@ production = {
 automaton = Automaton(states, alphabet, transition, initial_state, accept_states)
 grammar = Grammar(nonterminal, terminal, production, start_symbol)
 
-print(grammar.reduce('aaabbb'))
+print(grammar.derive('S', 'aaaaaabbbbbb'))
 
 # print(automaton.verify_word('001010101010111000100000001'))
 # print(automaton.determinize().transition)
