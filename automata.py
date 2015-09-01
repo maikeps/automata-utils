@@ -64,8 +64,6 @@ class Automaton:
 			if state not in self.current_states:
 				self.current_states.append(state)
 
-		# print(self.current_states)
-
 	def check_done(self):
 		for state in self.current_states:
 			if state in self.accept_states: return True
@@ -140,6 +138,32 @@ class Automaton:
 			if aux_str not in transition_aux:
 				self.addState(transition_aux[new_state_name][item], aux_str, transition, transition_aux)
 
+	def generate_grammar(self):
+		automaton = self.determinize()
+
+		start_symbol = automaton.initial_state
+		nonterminal = [item for item in automaton.states if item is not 'M' and item is not 'F']
+		terminal = [item for item in automaton.alphabet]
+
+		production = {}
+		for key in automaton.transition:
+			if key is not 'M' and key is not 'F':
+				prod = ""
+				for character in automaton.transition[key]:
+					prod = character+"<"+automaton.transition[key][character][0]+">"
+					try:
+						production[key].append(prod)
+					except KeyError:
+						production[key] = [prod]
+		
+		for key in automaton.transition:
+			for character in automaton.transition[key]:
+				for accept_state in automaton.accept_states:
+					if automaton.transition[key][character][0] is accept_state:
+						production[key].append(character)
+
+		return Grammar(nonterminal, terminal, production, start_symbol)
+
 
 class Grammar:
 	def __init__(self, nonterminal, terminal, production, start_symbol):
@@ -175,12 +199,8 @@ class Grammar:
 		for key in self.production:
 			string += "\t"+key+" -> "+self.production[key][0]
 			for i in range(1, len(self.production[key])-1):
-				# print(self.production[key][i])
 				string += " | "+self.production[key][i]
 			string += " | "+self.production[key][-1]+"\n"
-			# for production in self.production[key]:
-
-				# print(production)
 
 		return string
 
@@ -251,12 +271,7 @@ class Grammar:
 
 		accept_states = ['F']
 		transition = {}
-		# for key in self.production:
-		# 	for item in self.production[key]:
-		# 		if item.islower():
-		# 			transition[key][item] = ['F']
-					# accept_states.append(key)
-		
+
 		for key in self.production:
 			transition[key] = {}
 			for item in self.production[key]:
@@ -289,16 +304,15 @@ class Grammar:
 		return automaton.determinize()
 
 # automaton
-states = ['q0', 'q1', 'q2', 'M']
+states = ['q0', 'q1', 'M']
 alphabet = ['0', '1']
 transition = {
-	'q0': {'0': ['q0', 'q1'], '1': ['q0']},
-	'q1': {'0': ['q2'], '1': ['M']},
-	'q2': {'0': ['q2'], '1': ['q2']},
+	'q0': {'0': ['q1'], '1': ['q0']},
+	'q1': {'0': ['q0'], '1': ['q1']},
 	'M': {'0': ['M'], '1': ['M']}
 }
 initial_state = 'q0'
-accept_states = ['q2']
+accept_states = ['q0']
 
 # grammar
 start_symbol = 'S'
@@ -312,8 +326,9 @@ production = {
 automaton = Automaton(states, alphabet, transition, initial_state, accept_states)
 grammar = Grammar(nonterminal, terminal, production, start_symbol)
 
-print(grammar)
-print(grammar.generate_automaton())
+print(automaton.generate_grammar())
+# print(grammar)
+# print(grammar.generate_automaton())
 
-# print(automaton.verify_word('001010101010111000100000001'))
+# print(automaton.verify_word('00000011000'))
 # print(automaton.determinize().transition)
