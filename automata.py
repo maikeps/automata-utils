@@ -39,30 +39,40 @@ class Automaton:
 		for key in self.transition:
 			for transition in self.transition[key]:
 				if key is not 'M' and key is not 'F':
-					string += "\t("+key+", "+transition+") -> "+self.transition[key][transition][0]+"\n"
+					string += "\t("+key+", "+transition+") -> "
+					for i in range(len(self.transition[key][transition])-1):
+						item = self.transition[key][transition][i]
+						string += item+" | "
+					string += self.transition[key][transition][-1]+"\n"
 
 
 		return string
 
-	def change_state(self, _input):
+	def change_state(self, current_states, _input):
 		achieved_states = []
 		deleted_states = []
 
-		for current_state in self.current_states:
+		# current_states = self.epsilon(current_states)
+
+		for current_state in current_states:
 			future_states = self.transition[current_state][_input]
 			for state in future_states:
 				achieved_states.append(state)
 
-		for state in self.current_states:
+		for state in current_states:
 			if state not in achieved_states:
 				deleted_states.append(state)
 
 		for state in deleted_states:
-			del self.current_states[self.current_states.index(state)]
+			del current_states[current_states.index(state)]
 
 		for state in achieved_states:
-			if state not in self.current_states:
-				self.current_states.append(state)
+			if state not in current_states:
+				current_states.append(state)
+
+		self.current_states = current_states
+
+		return current_states
 
 	def check_done(self):
 		for state in self.current_states:
@@ -81,17 +91,33 @@ class Automaton:
 		transition_aux = {}
 
 		for state in transition:
-			for _input in transition[state]:
-				# Create new state
-				new_state = transition[state][_input]
+			if '&' in self.alphabet:
+				epsilon = self.epsilon(state)
+			else:
+				epsilon = [state]
+
+			if epsilon != [state]:
+				new_state = epsilon
 
 				new_state_str = ""
-				
+
 				for aux in new_state:
 					new_state_str += aux
 
 				if new_state_str not in transition:
-					self.addState(new_state, new_state_str, transition, transition_aux)
+					self.add_state(new_state, new_state_str, transition, transition_aux)
+			else:
+				for _input in transition[state]:
+					if _input is not '&':
+						new_state = transition[state][_input]
+										
+						new_state_str = ""
+					
+						for aux in new_state:
+							new_state_str += aux
+
+						if new_state_str not in transition:
+							self.add_state(new_state, new_state_str, transition, transition_aux)
 
 		for key in transition_aux:
 			transition[key] = transition_aux[key]
@@ -112,11 +138,35 @@ class Automaton:
 					for aux in transition[state][next_state]:
 						state_str += aux
 					transition[state][next_state] = [state_str]
+			if '&' in self.alphabet:
+				del transition[state]['&']
 
+		alphabet = self.alphabet
+
+		if '&' in self.alphabet:
+			del alphabet[alphabet.index('&')]
 
 		return Automaton(new_states, self.alphabet,	transition,	self.initial_state, new_accept_states)
 
-	def addState(self, new_state_arr, new_state_name, transition, transition_aux):
+	def epsilon(self, state):
+		closure = [state]
+
+		states_aux = [state];
+		while True:
+			count = 0
+			next_states = []
+			for state_aux in states_aux:
+				next_states = self.change_state([state_aux], '&')
+				for next_state in next_states:
+					if next_state not in closure and next_state is not 'M' and next_state is not 'F':
+						count += 1
+						closure.append(next_state)
+			states_aux = next_states
+
+			if count == 0:
+				return closure
+
+	def add_state(self, new_state_arr, new_state_name, transition, transition_aux):
 		# Add the new transition, with empty info
 		transition_aux[new_state_name] = {}
 
@@ -127,7 +177,13 @@ class Automaton:
 			for state_aux in new_state_arr: 
 				for item in transition[state_aux][input_aux]:
 					if item not in aux and transition[state_aux][input_aux] != ['M']:
-						aux.append(item)
+						if '&' not in self.alphabet:
+							aux.append(item)
+						else:
+							aux = aux + self.epsilon(item)
+
+			if aux == []:
+				aux = ['M']
 			transition_aux[new_state_name][input_aux] = aux
 
 		for item in transition_aux[new_state_name]:
@@ -135,8 +191,8 @@ class Automaton:
 			for state in transition_aux[new_state_name][item]:
 				aux_str += state
 				
-			if aux_str not in transition_aux:
-				self.addState(transition_aux[new_state_name][item], aux_str, transition, transition_aux)
+			if aux_str not in transition and aux_str not in transition_aux:
+				self.add_state(transition_aux[new_state_name][item], aux_str, transition, transition_aux)
 
 	def generate_grammar(self):
 		automaton = self.determinize()
@@ -304,15 +360,16 @@ class Grammar:
 		return automaton.determinize()
 
 # automaton
-states = ['q0', 'q1', 'M']
-alphabet = ['0', '1']
+states = ['q0', 'q1', 'q2', 'M']
+alphabet = ['1', '2', '3']
 transition = {
-	'q0': {'0': ['q1'], '1': ['q0']},
-	'q1': {'0': ['q0'], '1': ['q1']},
-	'M': {'0': ['M'], '1': ['M']}
+	'q0': {'1': ['q0', 'q1'], '2': ['M'], '3': ['M']},
+	'q1': {'1': ['M'], '2': ['q1'], '3': ['M']},
+	'q2': {'1': ['M'], '2': ['M'], '3': ['q2']},
+	'M': {'1': ['M'], '2': ['M'], '3': ['M']}
 }
 initial_state = 'q0'
-accept_states = ['q0']
+accept_states = ['q2']
 
 # grammar
 start_symbol = 'S'
@@ -326,7 +383,9 @@ production = {
 automaton = Automaton(states, alphabet, transition, initial_state, accept_states)
 grammar = Grammar(nonterminal, terminal, production, start_symbol)
 
-print(automaton.generate_grammar())
+# print(automaton.generate_grammar())
+# print(automaton.change_state(['M'], ''))
+print(automaton.determinize())
 # print(grammar)
 # print(grammar.generate_automaton())
 
