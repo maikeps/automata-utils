@@ -19,12 +19,25 @@ class Automaton:
 		string += "Initial State: "
 		string += "\t"+self.initial_state+"\n"
 
+		# Accept States
+		string += "Accept States: "
+		string += "\t{"
+		for i in range(len(self.accept_states)-1):
+			string += self.accept_states[i]+", "
+		try:
+			string += self.accept_states[-1]+"}\n"
+		except IndexError:
+			string += "}\n"
+
 		# Alphabet
 		string += "Alphabet: "
 		string += "\t{"
 		for i in range(len(self.alphabet)-1):
 			string += self.alphabet[i]+", "
-		string += self.alphabet[-1]+"}\n"
+		try:
+			string += self.alphabet[-1]+"}\n"
+		except IndexError:
+			string += "}\n"
 
 		# States
 		string += "States: "
@@ -220,7 +233,6 @@ class Automaton:
 
 		return Grammar(nonterminal, terminal, production, start_symbol)
 
-
 class Grammar:
 	def __init__(self, nonterminal, terminal, production, start_symbol):
 		self.nonterminal = nonterminal
@@ -359,6 +371,31 @@ class Grammar:
 		automaton = Automaton(states, alphabet, transition, initial_state, accept_states)
 		return automaton.determinize()
 
+class RegularExpression:
+
+	def __init__(self, re):
+		self.re = re
+
+	def generate_automaton(self):
+		if self.re is '&':
+			return Automaton(states=['q0'], alphabet=[], transition=[], initial_state='q0', accept_states=['q0'])
+		if self.re is '':
+			return Automaton(states=['q0'], alphabet=[], transition=[], initial_state='q0', accept_states=[])
+		if len(self.re) == 1:
+			states = ['q0', 'q1']
+			alphabet = [self.re]
+			transition = {
+				'q0': {},
+				'q1': {}
+			}
+			transition['q0'][self.re] = ['q1']
+			transition['q1'][self.re] = ['M']
+			initial_state = 'q0'
+			accept_states = ['q1']
+
+			return Automaton(states, alphabet, transition, initial_state, accept_states)
+
+
 # automaton
 states = ['q0', 'q1', 'q2', 'M']
 alphabet = ['1', '2', '3']
@@ -382,10 +419,12 @@ production = {
 
 automaton = Automaton(states, alphabet, transition, initial_state, accept_states)
 grammar = Grammar(nonterminal, terminal, production, start_symbol)
+re = RegularExpression('d')
 
+print(re.generate_automaton())
 # print(automaton.generate_grammar())
 # print(automaton.change_state(['M'], ''))
-print(automaton.determinize())
+# print(automaton.determinize())
 # print(grammar)
 # print(grammar.generate_automaton())
 
