@@ -378,6 +378,9 @@ class RegularExpression:
 	def __init__(self, re):
 		self.re = re
 
+	def __str__(self):
+		return self.re
+
 	def generate_automaton(self):
 		if self.re is '&':
 			return Automaton(states=['q0'], alphabet=[], transition=[], initial_state='q0', accept_states=['q0'])
