@@ -1,12 +1,9 @@
 {
+	"type": "automaton",
 	"states": ["q0", "q1", "q2", "M"],
-
 	"alphabet": ["1", "2", "3"],
-
 	"initial_state": "q0",
-	
 	"accept_states": ["q2"],
-	
 	"transition": {
 		"q0": {
 			"1": ["q0", "q1"],

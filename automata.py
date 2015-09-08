@@ -375,56 +375,188 @@ class Grammar:
 
 class RegularExpression:
 
-	def __init__(self, re):
-		self.re = re
+	def __init__(self, expression):
+		self.expression = expression
 
 	def __str__(self):
-		return self.re
+		return self.expression
 
 	def generate_automaton(self):
-		if self.re is '&':
+		if self.expression is '&':
 			return Automaton(states=['q0'], alphabet=[], transition=[], initial_state='q0', accept_states=['q0'])
-		if self.re is '':
+		if self.expression is '':
 			return Automaton(states=['q0'], alphabet=[], transition=[], initial_state='q0', accept_states=[])
-		if len(self.re) == 1:
+		if len(self.expression) == 1:
 			states = ['q0', 'q1']
-			alphabet = [self.re]
+			alphabet = [self.expression]
 			transition = {
 				'q0': {},
 				'q1': {}
 			}
-			transition['q0'][self.re] = ['q1']
-			transition['q1'][self.re] = ['M']
+			transition['q0'][self.expression] = ['q1']
+			transition['q1'][self.expression] = ['M']
 			initial_state = 'q0'
 			accept_states = ['q1']
 
 			return Automaton(states, alphabet, transition, initial_state, accept_states)
 
-def open_automaton(src):
-	with open(src) as automaton_file:
-		automaton_json = json.load(automaton_file)
 
-		states = automaton_json["states"]
-		alphabet = automaton_json["alphabet"]
-		initial_state = automaton_json["initial_state"]
-		accept_states = automaton_json["accept_states"]
-		transition = automaton_json["transition"]
+def open_file(src):
+	with open(src) as f:
+		json_file = json.load(f)
+		file_type = json_file["type"]
 
-		return Automaton(states, alphabet, transition, initial_state, accept_states)
+		if file_type == 'automaton':
+			return file_type, open_automaton(json_file)
+		if file_type == 'grammar':
+			return file_type, open_grammar(json_file)
+		if file_type == 're':
+			return file_type, open_re(json_file)
 
-def open_grammar(src):
-	with open(src) as grammar_file:
-		grammar_json = json.load(grammar_file)
+def save_file(target_src, obj):
+	with open(target_src, 'w') as outfile:
+		if type(obj) is Automaton:
+			save_automaton(outfile, obj)
+		elif type(obj) is Grammar:
+			save_grammar(outfile, obj)
+		elif type(obj) is RegularExpression:
+			save_re(outfile, obj)
 
-		start_symbol = grammar_json["start_symbol"]
-		terminal = grammar_json["terminal"]
-		nonterminal = grammar_json["nonterminal"]
-		production = grammar_json["production"]
+def open_automaton(json_file):
+	states = json_file["states"]
+	alphabet = json_file["alphabet"]
+	initial_state = json_file["initial_state"]
+	accept_states = json_file["accept_states"]
+	transition = json_file["transition"]
 
-		return Grammar(nonterminal, terminal, production, start_symbol)
+	return Automaton(states, alphabet, transition, initial_state, accept_states)
 
-def open_re(src):
-	with open(src) as re_file:
-		re_json = json.load(re_file)
+def save_automaton(outfile, obj):
+	json_file = {
+		"type": "automaton",
+		"states": obj.states,
+		"alphabet": obj.alphabet,
+		"initial_state": obj.initial_state,
+		"accept_states": obj.accept_states,
+		"transition": obj.transition
+	}
+	json.dump(json_file, outfile)
 
-		return RegularExpression(re_json["expression"])
+def open_grammar(json_file):
+	start_symbol = json_file["start_symbol"]
+	terminal = json_file["terminal"]
+	nonterminal = json_file["nonterminal"]
+	production = json_file["production"]
+
+	return Grammar(nonterminal, terminal, production, start_symbol)
+
+def save_grammar(outfile, obj):
+	json_file = {
+		"type": "grammar",
+		"start_symbol": obj.start_symbol,
+		"terminal": obj.terminal,
+		"nonterminal": obj.nonterminal,
+		"production": obj.production
+	}
+	json.dump(json_file, outfile)
+
+def open_re(json_file):
+	return RegularExpression(json_file["expression"])
+
+def save_re(outfile, obj):
+	json_file = {
+		"type": "re",
+		"expression": obj.expression
+	}
+	json.dump(json_file, outfile)
+
+def process_load(src):
+	file_type, current = open_file(args[1])
+	log = 'File "' + args[1] + '" loaded.\nYou are now working with'
+	if type(current) is Automaton:
+		log += ' an Automaton.'
+	elif type(current) is Grammar:
+		log += ' a Grammar.'
+	elif type(current) is RegularExpression:
+		log += ' a Regular Expression.'
+	print(log)
+
+	return file_type, current
+
+
+def process_conversion(current, target):
+	if target == 'automaton':
+		conversion = current.generate_automaton()
+	elif target == 'grammar':
+		conversion = current.generate_grammar()
+	elif target == 're':
+		conversion = current.generage_re()
+
+	return conversion
+
+def process_save(which, target_src):
+	if which == 'current':
+		save_file(target_src, current)
+	elif which == 'conversion':
+		save_file(target_src, conversion)
+
+def proccess_print(which):
+	if which == 'current':
+		print(current)
+	elif which == 'conversion':
+		print(conversion)
+
+def show_help():
+	print("Help")
+
+if __name__ == '__main__':
+	command = ""
+	while True:
+		command = input('>')
+		args = command.split(' ')
+
+		try:
+			if args[0] == 'load':
+				try:
+					file_type, current = process_load(args[1])
+				except FileNotFoundError:
+					print('File "'+args[1]+'" not found.')
+
+
+			elif args[0] == 'convert':
+				try:
+					conversion = process_conversion(current, args[1])
+				except NameError:
+					print('Error: File not yet loaded.')
+				except AttributeError:
+					print('Error: Cannot convert '+file_type+' into '+args[1])
+		
+			elif args[0] == 'save':
+				try:
+					process_save(args[1], args[2])
+				except NameError:
+					if args[1] == 'current':
+						print('Error: File not yet loaded.')
+					elif args[1] == 'conversion':
+						print('Error: File not yet converted.')
+
+			elif args[0] == 'print':
+				try:
+					proccess_print(args[1])
+				except NameError:
+					if args[1] == 'current':
+						print('Error: File not yet loaded.')
+					elif args[1] == 'conversion':
+						print('Error: File not yet converted.')
+
+			elif args[0] == 'exit':
+				break
+
+			elif args[0] == 'help':
+				show_help()
+
+			else:
+				print('Command not found.')
+
+		except IndexError:
+			print('Not enough arguments.')
