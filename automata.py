@@ -1,5 +1,7 @@
 #! /usr/bin/python3
 
+import json
+
 class Automaton:
 
 	# An automaton is defined formally by a 5-tuple
@@ -395,38 +397,31 @@ class RegularExpression:
 
 			return Automaton(states, alphabet, transition, initial_state, accept_states)
 
+def open_automaton(src):
+	with open(src) as automaton_file:
+		automaton_json = json.load(automaton_file)
 
-# automaton
-states = ['q0', 'q1', 'q2', 'M']
-alphabet = ['1', '2', '3']
-transition = {
-	'q0': {'1': ['q0', 'q1'], '2': ['M'], '3': ['M']},
-	'q1': {'1': ['M'], '2': ['q1'], '3': ['M']},
-	'q2': {'1': ['M'], '2': ['M'], '3': ['q2']},
-	'M': {'1': ['M'], '2': ['M'], '3': ['M']}
-}
-initial_state = 'q0'
-accept_states = ['q2']
+		states = automaton_json["states"]
+		alphabet = automaton_json["alphabet"]
+		initial_state = automaton_json["initial_state"]
+		accept_states = automaton_json["accept_states"]
+		transition = automaton_json["transition"]
 
-# grammar
-start_symbol = 'S'
-terminal = ['a', 'b']
-nonterminal = ['S', 'A']
-production = {
-	'S': ['aA', 'bS'],
-	'A': ['aS', 'bA', 'a']
-}
+		return Automaton(states, alphabet, transition, initial_state, accept_states)
 
-automaton = Automaton(states, alphabet, transition, initial_state, accept_states)
-grammar = Grammar(nonterminal, terminal, production, start_symbol)
-re = RegularExpression('d')
+def open_grammar(src):
+	with open(src) as grammar_file:
+		grammar_json = json.load(grammar_file)
 
-print(re.generate_automaton())
-# print(automaton.generate_grammar())
-# print(automaton.change_state(['M'], ''))
-# print(automaton.determinize())
-# print(grammar)
-# print(grammar.generate_automaton())
+		start_symbol = grammar_json["start_symbol"]
+		terminal = grammar_json["terminal"]
+		nonterminal = grammar_json["nonterminal"]
+		production = grammar_json["production"]
 
-# print(automaton.verify_word('00000011000'))
-# print(automaton.determinize().transition)
+		return Grammar(nonterminal, terminal, production, start_symbol)
+
+def open_re(src):
+	with open(src) as re_file:
+		re_json = json.load(re_file)
+
+		return RegularExpression(re_json["expression"])
