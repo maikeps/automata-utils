@@ -1,5 +1,7 @@
 #! /usr/bin/python3
 
+import copy
+
 class Automaton:
 
 	# An automaton is defined formally by a 5-tuple
@@ -100,7 +102,7 @@ class Automaton:
 		return self.check_done();
 
 	def determinize(self):
-		transition = self.transition
+		transition = copy.deepcopy(self.transition)
 		transition_aux = {}
 
 		for state in transition:
