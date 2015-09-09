@@ -90,7 +90,9 @@ def process_load(src):
 
 
 def process_conversion(current, target):
-	if target == 'automaton':
+	if target == 'deterministic':
+		conversion = current.determinize()
+	elif target == 'automaton':
 		conversion = current.generate_automaton()
 	elif target == 'grammar':
 		conversion = current.generate_grammar()
@@ -110,6 +112,8 @@ def proccess_print(which):
 		print(current)
 	elif which == 'conversion':
 		print(conversion)
+	else:
+		print('Command not found.')
 
 def show_help():
 	print("Help")
@@ -134,7 +138,10 @@ if __name__ == '__main__':
 				except NameError:
 					print('Error: File not yet loaded.')
 				except AttributeError:
-					print('Error: Cannot convert '+file_type+' into '+args[1])
+					if file_type != 'automaton':
+						print('Error: Can only convert automata to their deterministic form.')
+					else:
+						print('Error: Cannot convert '+file_type+' into '+args[1])
 		
 			elif args[0] == 'save':
 				try:
