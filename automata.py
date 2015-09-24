@@ -117,27 +117,18 @@ class Automaton:
 
 			if epsilon != [state]:
 				new_state = epsilon
+				new_state_str = ''.join(new_state)
 
-				new_state_str = ""
-
-				for aux in new_state:
-					new_state_str += aux
-
-				if new_state_str not in transition_aux:
-					
-					self.add_state(new_state, new_state_str, transition, transition_aux)
+				if new_state_str not in transition_aux:					
+					self.add_state(new_state, transition, transition_aux)
 			else:
 				for _input in transition[state]:
 					if _input is not '&':
 						new_state = transition[state][_input]
-										
-						new_state_str = ""
+						new_state_str = ''.join(new_state)
 					
-						for aux in new_state:
-							new_state_str += aux
-
 						if new_state_str not in transition_aux:
-							self.add_state(new_state, new_state_str, transition, transition_aux)
+							self.add_state(new_state, transition, transition_aux)
 		
 		for key in transition_aux:
 			transition[key] = transition_aux[key]
@@ -188,8 +179,10 @@ class Automaton:
 			if count == 0:
 				return closure
 
-	def add_state(self, new_state_arr, new_state_name, transition, transition_aux):
+	def add_state(self, new_state_arr, transition, transition_aux):
 		# Add the new transition, with empty info
+		new_state_arr = sorted(new_state_arr)
+		new_state_name = ''.join(new_state_arr)
 		transition_aux[new_state_name] = {}
 
 		for input_aux in self.alphabet:
@@ -200,22 +193,21 @@ class Automaton:
 				try:
 					for item in transition[state_aux][input_aux]:
 						if item not in aux and transition[state_aux][input_aux] != ['M']:
-							aux = aux + self.epsilon(item)
+							aux = list(set(aux) | set(self.epsilon(item)))
 
 				except:
 					pass
 				
 			if aux == []:
 				aux = ['M']
-			transition_aux[new_state_name][input_aux] = aux
+
+			transition_aux[new_state_name][input_aux] = sorted(aux)
 
 		for item in transition_aux[new_state_name]:
-			aux_str = ""
-			for state in transition_aux[new_state_name][item]:
-				aux_str += state
+			aux_str = ''.join(transition_aux[new_state_name][item])
 				
 			if aux_str not in transition_aux:
-				self.add_state(transition_aux[new_state_name][item], aux_str, transition, transition_aux)
+				self.add_state(transition_aux[new_state_name][item], transition, transition_aux)
 
 	def generate_grammar(self):
 		automaton = self.determinize()
