@@ -200,10 +200,7 @@ class Automaton:
 				try:
 					for item in transition[state_aux][input_aux]:
 						if item not in aux and transition[state_aux][input_aux] != ['M']:
-							if '&' not in self.alphabet:
-								aux.append(item)
-							else:
-								aux = aux + self.epsilon(item)
+							aux = aux + self.epsilon(item)
 
 				except:
 					pass
