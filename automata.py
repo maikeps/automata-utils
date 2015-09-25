@@ -106,59 +106,19 @@ class Automaton:
 		return self.check_done();
 
 	def determinize(self):
-		transition = copy.deepcopy(self.transition)
-		transition_aux = {}
+		new_transition = {}
 		
-		for state in transition:
-			# if '&' in self.alphabet:
-			epsilon = self.epsilon(state)
-			# else:
-				# epsilon = [state]
+		initial_closure = self.epsilon(self.initial_state)
+		self.add_state(initial_closure, self.transition, new_transition)
 
-			if epsilon != [state]:
-				new_state = epsilon
-				new_state_str = ''.join(new_state)
-
-				if new_state_str not in transition_aux:					
-					self.add_state(new_state, transition, transition_aux)
-			else:
-				for _input in transition[state]:
-					if _input is not '&':
-						new_state = transition[state][_input]
-						new_state_str = ''.join(new_state)
-					
-						if new_state_str not in transition_aux:
-							self.add_state(new_state, transition, transition_aux)
-		
-		for key in transition_aux:
-			transition[key] = transition_aux[key]
-
-
-		new_states = [key for key in transition]
+		new_states = [key for key in new_transition]
 		new_accept_states = []
-		for state in transition:
+		for state in new_transition:
 			for final_state in self.accept_states:
 				if final_state in state:
 					new_accept_states.append(state)
 
-		for state in transition:
-			for next_state in transition[state]:
-				if len(transition[state][next_state]) > 1:
-					state_str = ""
-				
-					for aux in transition[state][next_state]:
-						state_str += aux
-					transition[state][next_state] = [state_str]
-			if '&' in self.alphabet:
-				del transition[state]['&']
-
-		alphabet = self.alphabet
-
-		if '&' in self.alphabet:
-			del alphabet[alphabet.index('&')]
-
-
-		return Automaton(new_states, self.alphabet,	transition,	''.join(self.epsilon(self.initial_state)), new_accept_states)
+		return Automaton(new_states, self.alphabet,	new_transition,	''.join(initial_closure), new_accept_states)
 
 	def epsilon(self, state):
 		closure = [state]
@@ -179,35 +139,35 @@ class Automaton:
 			if count == 0:
 				return closure
 
-	def add_state(self, new_state_arr, transition, transition_aux):
+	def add_state(self, new_state_arr, transition, new_transition):
 		# Add the new transition, with empty info
 		new_state_arr = sorted(new_state_arr)
 		new_state_name = ''.join(new_state_arr)
-		transition_aux[new_state_name] = {}
+
+		new_transition[new_state_name] = {}
 
 		for input_aux in self.alphabet:
 			aux = []
 			# Get each possible transition from the new state
 			# and get the transition from the current input
-			for state_aux in new_state_arr: 
+			for state_aux in new_state_arr:
 				try:
 					for item in transition[state_aux][input_aux]:
+
 						if item not in aux and transition[state_aux][input_aux] != ['M']:
 							aux = list(set(aux) | set(self.epsilon(item)))
-
 				except:
 					pass
 				
 			if aux == []:
 				aux = ['M']
 
-			transition_aux[new_state_name][input_aux] = sorted(aux)
+			sort = sorted(aux)
+			name = ''.join(sort)
+			new_transition[new_state_name][input_aux] = [name]
 
-		for item in transition_aux[new_state_name]:
-			aux_str = ''.join(transition_aux[new_state_name][item])
-				
-			if aux_str not in transition_aux:
-				self.add_state(transition_aux[new_state_name][item], transition, transition_aux)
+			if name not in new_transition:
+				self.add_state(sort, transition, new_transition)
 
 	def generate_grammar(self):
 		automaton = self.determinize()
@@ -221,19 +181,23 @@ class Automaton:
 		else:
 			start_symbol = '<'+automaton.initial_state+'>'
 			
-		nonterminal = ['<'+item+'>' for item in automaton.states if item is not 'M' and item is not 'F']
-		nonterminal.append(start_symbol)
-		terminal = [item for item in automaton.alphabet]
+		nonterminal = []
+		for item in automaton.states:
+			if item is not 'M' and item is not 'F' and '<'+item+'>' not in nonterminal:
+				nonterminal.append('<'+item+'>')
+
+		terminal = automaton.alphabet
 
 		for key in automaton.transition:
 			if key is not 'M' and key is not 'F':
 				prod = ""
 				for character in automaton.transition[key]:
-					prod = character+"<"+automaton.transition[key][character][0]+">"
-					try:
-						production['<'+key+'>'].append(prod)
-					except KeyError:
-						production['<'+key+'>'] = [prod]
+					if automaton.transition[key][character][0] is not 'M':
+						prod = character+"<"+automaton.transition[key][character][0]+">"
+						try:
+							production['<'+key+'>'].append(prod)
+						except KeyError:
+							production['<'+key+'>'] = [prod]
 		
 		for key in automaton.transition:
 			for character in automaton.transition[key]:

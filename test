@@ -1,0 +1,9 @@
+load tests/automaton3
+print current
+convert grammar
+print conversion
+save conversion tests/aut-grammar3
+load tests/aut-grammar3
+convert automaton
+print conversion
+exit

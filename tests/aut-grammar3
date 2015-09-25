@@ -1,0 +1,1 @@
+{"type": "grammar", "terminal": ["a", "b"], "start_symbol": "<pqr>", "nonterminal": ["<rs>", "<pqr>", "<qs>"], "production": {"<qs>": ["a<qs>", "a"], "<rs>": ["b<rs>", "b"], "<pqr>": ["b<rs>", "a<qs>", "b", "a"]}}

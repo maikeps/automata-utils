@@ -98,7 +98,6 @@ def process_conversion(current, target):
 		conversion = current.generate_grammar()
 	elif target == 're':
 		conversion = current.generage_re()
-
 	return conversion
 
 def process_save(which, target_src):
