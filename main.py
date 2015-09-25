@@ -97,7 +97,7 @@ def process_conversion(current, target):
 	elif target == 'grammar':
 		conversion = current.generate_grammar()
 	elif target == 're':
-		conversion = current.generage_re()
+		conversion = current.generate_regular_expression()
 	return conversion
 
 def process_save(which, target_src):
@@ -134,8 +134,8 @@ if __name__ == '__main__':
 			elif args[0] == 'convert':
 				try:
 					conversion = process_conversion(current, args[1])
-				except NameError:
-					print('Error: File not yet loaded.')
+				# except NameError:
+				# 	print('Error: File not yet loaded.')
 				except AttributeError:
 					if file_type != 'automaton':
 						print('Error: Can only convert automata to their deterministic form.')

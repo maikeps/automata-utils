@@ -14,7 +14,7 @@ class Automaton:
 		self.initial_state = initial_state
 		self.accept_states = accept_states
 
-		self.current_states = [initial_state, ]
+		self.current_states = [initial_state]
 
 	def __str__(self):
 		string = ""
@@ -207,6 +207,109 @@ class Automaton:
 
 
 		return Grammar(nonterminal, terminal, production, start_symbol)
+
+	def generate_regular_expression(self):
+		re = ''
+
+		deterministic = self.determinize();
+
+		states = deterministic.states + ['qi', 'qf']
+		initial_state = 'qi'
+		accept_state = ['qf']
+
+		transition = copy.deepcopy(deterministic.transition)
+		transition[initial_state] = {}
+		
+		for char in deterministic.alphabet:
+			transition[initial_state][char] = ['M']
+
+		transition[initial_state]['&'] = [deterministic.initial_state]
+		for state in deterministic.accept_states:
+			transition[state]['&'] = accept_state
+
+		transition['qf'] = {}
+		for char in deterministic.alphabet:
+			transition['qf'][char] = ['M']
+
+		general_automaton = Automaton(states, deterministic.alphabet, transition, initial_state, accept_state)
+		
+		transition = general_automaton.transition
+	
+		try:
+			del transition['M']
+			del transition['F']
+		except KeyError:
+			pass
+
+
+		while len(transition) > 2:
+			index = 0
+			to_remove = list(transition.keys())[index]
+			while to_remove == 'qi' or to_remove == 'qf':
+				index += 1
+				to_remove = list(transition.keys())[index]
+
+			print(to_remove, transition)
+
+			previous_states = []
+			next_states = []
+
+			for state in transition:
+				for char in transition[state]:
+					if transition[state][char][0] == to_remove and state != to_remove:
+						previous_states.append((state, char))
+
+			for char in transition[to_remove]:
+				if transition[to_remove][char][0] != to_remove and transition[to_remove][char][0] is not 'M' and transition[to_remove][char][0] is not 'F':
+					next_states.append((transition[to_remove][char][0], char))
+
+
+
+			for previous_state in previous_states:
+				concat = ''
+				for next_state in next_states:
+					concat = previous_state[1] + '$' + next_state[1]
+					concat = concat.replace('&', '')
+
+					for char in transition[to_remove]:
+						if to_remove == transition[to_remove][char][0]:
+							concat = concat.replace('$', '('+char+')*')
+							break
+
+					if '$' in concat:
+						concat = concat.replace('$', '')
+
+					transition[previous_state[0]][concat] = [next_state[0]]
+
+				if concat is not previous_state[1]:
+					del transition[previous_state[0]][previous_state[1]]
+
+			union = ''
+
+			for previous_state in previous_states:
+				state = previous_state[0]
+				for char in list(transition[state].keys()):
+					aux = transition[state][char]
+					for char2 in list(transition[state].keys()):
+						if aux == transition[state][char2] and char != char2:
+							union = char + '|' + char2
+							transition[state][union] = transition[state][char]
+							del transition[state][char]
+							del transition[state][char2]
+							break
+					if union != '':
+						break
+			del transition[to_remove]
+			
+
+		for char in list(transition['qi'].keys()):
+			if transition['qi'][char][0] == 'M':
+				del transition['qi'][char]
+
+
+
+		key = list(transition['qi'].keys())
+		return RegularExpression(key[0])
 
 class Grammar:
 	def __init__(self, nonterminal, terminal, production, start_symbol):
