@@ -1,5 +1,3 @@
-#! /usr/bin/python3
-
 import copy
 import re
 
@@ -168,6 +166,44 @@ class Automaton:
 
 			if name not in new_transition:
 				self.add_state(sort, transition, new_transition)
+
+	def union(self, other):
+		new_states = list(set(self.states) | set(other.states))
+		new_alphabet = list(set(self.alphabet) | set(other.alphabet))
+		new_initial_state = 'qi'
+		new_final_state = ['qf']
+		new_transition = copy.deepcopy(self.transition)
+
+		name_map = {}
+
+		for key in other.transition:
+			state = key
+			i = 1
+			while state in new_transition:
+				state = key+str(i)
+				i += 1
+			name_map[state] = key
+			new_transition[state] = {}
+			for item in other.transition[key]:
+				new_transition[state] = item
+
+		for key in new_transition:
+			if key == self.initial_state or name_map[state] == other.initial_state:
+				new_transition[new_initial_state] = {}
+				for item in new_alphabet:
+					new_transition[new_initial_state][item] = ['M']
+				new_transition[new_initial_state]['&'] = [key]
+			for item in new_alphabet:
+				if set(new_transition[key][item]).issubset(set(self.accept_states)) or set(new_transition[key][item]).issubset(set(other.accept_states)):
+					try:
+						new_transition[key]['&'].append('qf')
+					except KeyError:
+						new_transition[key]['&'] = new_final_state
+
+		
+		union_automaton = Automaton(new_states, new_alphabet, new_transition, new_initial_state, new_accept_states)
+		return union_automaton.determinize()
+
 
 	def generate_grammar(self):
 		automaton = self.determinize()
@@ -457,6 +493,26 @@ class RegularExpression:
 		return self.expression
 
 	def generate_automaton(self):
+		# automata = []
+		# i = 0
+		# while i < len(self.expression):
+		# 	char = self.expression[i]
+		# 	if char is '(':
+		# 		end = i
+		# 		while self.expression[end] is not ')':
+		# 			end += 1
+		# 		automata.append(self.generate_automaton(i, end))
+
+		# 		closure, end = self.generate_scope(i)
+		# 		automata.append(closure)
+		# 		i = end
+		# 	else:
+		# 		automata.append(self.generate_simple_automaton(char))
+		# 	i += 1
+
+		# for a in automata:
+		# 	print(a, '\n')
+
 		if self.expression is '&':
 			return Automaton(states=['q0'], alphabet=[], transition=[], initial_state='q0', accept_states=['q0'])
 		if self.expression is '':
@@ -474,3 +530,30 @@ class RegularExpression:
 			accept_states = ['q1']
 
 			return Automaton(states, alphabet, transition, initial_state, accept_states)
+
+	# def generate_scope(self, start):
+	# 	automata = []
+	# 	for i in range(start, len(self.expression)):
+	# 		char = self.expression[i]
+	# 		if char is ')':
+	# 			try:
+	# 				next_char = self.expression[i+1]
+	# 				if next_char is '*':
+
+	# 			except IndexError:
+	# 				pass
+
+
+	# def generate_simple_automaton(self, char):
+	# 	states = ['q0', 'q1']
+	# 	alphabet = [char]
+	# 	transition = {
+	# 		'q0': {},
+	# 		'q1': {}
+	# 	}
+	# 	transition['q0'][char] = ['q1']
+	# 	transition['q1'][char] = ['M']
+	# 	initial_state = 'q0'
+	# 	accept_states = ['q1']
+
+	# 	return Automaton(states, alphabet, transition, initial_state, accept_states)
