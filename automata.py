@@ -239,7 +239,6 @@ class Automaton:
 		new_states = [state for state in new_transition]
 
 		union_automaton = Automaton(new_states, new_alphabet, new_transition, new_initial_state, new_accept_states)
-		print(union_automaton)
 		return union_automaton.determinize().beautify()
 
 	def concat(self, other):
@@ -307,7 +306,7 @@ class Automaton:
 		new_states = [state for state in new_transition]
 		new_accept_states = [name_map[item] for item in other_deterministic.accept_states]
 
-		concat_automaton = self.rename_states(new_states, new_alphabet, new_transition, new_initial_state, new_accept_states)
+		concat_automaton = Automaton(new_states, new_alphabet, new_transition, new_initial_state, new_accept_states)
 		return concat_automaton.determinize().beautify()
 
 	def beautify(self):
@@ -322,8 +321,6 @@ class Automaton:
 			if state != self.initial_state and state is not 'M':
 				name_map[state] = 'q'+str(len(name_map)-1)
 
-		print(name_map)
-
 		for state in self.transition:
 			new_transition[name_map[state]] = {}
 			for char in self.transition[state]:
@@ -337,74 +334,6 @@ class Automaton:
 		new_accept_states = [name_map[state] for state in self.accept_states]
 
 		return Automaton(new_states, self.alphabet, new_transition, new_initial_state, new_accept_states)
-				
-
-
-
-
-
-		# print(self.transition)
-		# print(self.initial_state)
-		# new_transition['q0'] = {}
-		# for char in self.transition[self.initial_state]:
-		# 	# print(self.transition[self.initial_state][char])
-		# 	new_transition['q0'][char] = self.transition[self.initial_state][char]
-
-		# # return self.rename_states(self.states, self.alphabet, self.transition, self.initial_state, self.accept_states)
-
-	def rename_states(self, states, alphabet, transition, initial_state, accept_states):
-		transition = copy.deepcopy(transition)
-
-		new_initial_state = ''
-		new_accept_states = []
-		new_transition = {}
-		to_delete = []
-
-	
-		new_initial_state = 'q0'
-		new_transition['q0'] = {}
-		for char in transition[initial_state]:
-			new_transition['q0'][char] = transition[initial_state][char]
-		to_delete.append(initial_state)
-
-		name_map = {}
-		name_map[initial_state] = 'q0'
-		name_map['M'] = 'M'
-
-		count = 1
-		for state in transition:
-			if state != initial_state and state != 'M':
-				new_name = 'q'+str(count)
-				count += 1
-
-				name_map[state] = new_name
-				
-				if state != new_name:
-					if state in accept_states:
-						new_accept_states.append(new_name)
-					
-					new_transition[new_name] = {}
-					for char in transition[state]:
-						new_transition[new_name][char] = transition[state][char]
-					to_delete.append(state)
-
-
-		for item in to_delete:
-			del transition[item]
-
-		# Update transitions with new names
-		for key in new_transition:
-			for char in new_transition[key]:
-				for i in range(len(new_transition[key][char])):
-					item = new_transition[key][char][i]
-					new_transition[key][char][i] = name_map[item]
-
-
-		new_states = [state for state in new_transition]
-
-		return Automaton(new_states, alphabet, new_transition, new_initial_state, new_accept_states)
-
-
 
 	def generate_grammar(self):
 		automaton = self.determinize()
@@ -485,8 +414,6 @@ class Automaton:
 			while to_remove == 'qi' or to_remove == 'qf':
 				index += 1
 				to_remove = list(transition.keys())[index]
-
-			print(to_remove, transition)
 
 			previous_states = []
 			next_states = []
