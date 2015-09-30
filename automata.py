@@ -620,68 +620,72 @@ class RegularExpression:
 	def __str__(self):
 		return self.expression
 
-	def generate_automaton(self):
-		# automata = []
-		# i = 0
-		# while i < len(self.expression):
-		# 	char = self.expression[i]
-		# 	if char is '(':
-		# 		end = i
-		# 		while self.expression[end] is not ')':
-		# 			end += 1
-		# 		automata.append(self.generate_automaton(i, end))
+	def generate_automaton(self, is_closure=False):
+		expression = self.expression
 
-		# 		closure, end = self.generate_scope(i)
-		# 		automata.append(closure)
-		# 		i = end
-		# 	else:
-		# 		automata.append(self.generate_simple_automaton(char))
-		# 	i += 1
+		automata = []
+		i = 0
+		cut = False
+		while i < len(expression):
+			char = expression[i]
+			if char != '(' and char != ')' and char != '*':
+				print(expression)
+				automata.append(self.generate_simple_automaton(char))
+			elif char == '(':
+				end = i
+				while expression[end] != ')':
+					end += 1
 
-		# for a in automata:
-		# 	print(a, '\n')
+				try:
+					if expression[end+1] == '*':
+						end += 1
+				except IndexError:
+					pass
 
-		if self.expression is '&':
-			return Automaton(states=['q0'], alphabet=[], transition=[], initial_state='q0', accept_states=['q0'])
-		if self.expression is '':
-			return Automaton(states=['q0'], alphabet=[], transition=[], initial_state='q0', accept_states=[])
-		if len(self.expression) == 1:
-			states = ['q0', 'q1']
-			alphabet = [self.expression]
-			transition = {
-				'q0': {},
-				'q1': {}
-			}
-			transition['q0'][self.expression] = ['q1']
-			transition['q1'][self.expression] = ['M']
-			initial_state = 'q0'
-			accept_states = ['q1']
+				sub_re = RegularExpression(expression[i:end+1])
 
-			return Automaton(states, alphabet, transition, initial_state, accept_states)
+				expression = expression.replace(sub_re.expression, '')
+				cut = True
+				print(expression)
 
-	# def generate_scope(self, start):
-	# 	automata = []
-	# 	for i in range(start, len(self.expression)):
-	# 		char = self.expression[i]
-	# 		if char is ')':
-	# 			try:
-	# 				next_char = self.expression[i+1]
-	# 				if next_char is '*':
+			
+				if sub_re.expression.count('(') == 1:
+					sub_re.expression = sub_re.expression.replace('(', '')
+					sub_re.expression = sub_re.expression.replace(')', '')
 
-	# 			except IndexError:
-	# 				pass
+				next_is_closure = sub_re.expression[-1] == '*'
+				if next_is_closure:
+					sub_re.expression = sub_re.expression[:-1]
+
+				automata.append(sub_re.generate_automaton(next_is_closure))
+				print(expression[i])
+				# i = end
+			if not cut:
+				i += 1
+			cut = False
+
+		final_automaton = automata[0]
+		for i in range(1, len(automata)):
+			final_automaton = final_automaton + automata[i]
+
+		if is_closure:
+			for state in final_automaton.transition:
+				if state in final_automaton.accept_states:
+					final_automaton.transition[state]['&'] = [final_automaton.initial_state]
+
+		return final_automaton
 
 
-	# def generate_simple_automaton(self, char):
-	# 	states = ['q0', 'q1']
-	# 	alphabet = [char]
-	# 	transition = {
-	# 		'q0': {},
-	# 		'q1': {}
-	# 	}
-	# 	transition['q0'][char] = ['q1']
-	# 	transition['q1'][char] = ['M']
-	# 	initial_state = 'q0'
-	# 	accept_states = ['q1']
+	def generate_simple_automaton(self, char):
+		states = ['q0', 'q1']
+		alphabet = [char]
+		transition = {
+			'q0': {},
+			'q1': {}
+		}
+		transition['q0'][char] = ['q1']
+		transition['q1'][char] = ['M']
+		initial_state = 'q0'
+		accept_states = ['q1']
 
-	# 	return Automaton(states, alphabet, transition, initial_state, accept_states)
+		return Automaton(states, alphabet, transition, initial_state, accept_states)
