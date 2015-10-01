@@ -120,7 +120,7 @@ class Automaton:
 		new_accept_states = []
 		for state in new_transition:
 			for final_state in self.accept_states:
-				if final_state in state:
+				if final_state in state and state not in new_accept_states:
 					new_accept_states.append(state)
 
 
@@ -407,8 +407,8 @@ class Automaton:
 		except KeyError:
 			pass
 
-
 		while len(transition) > 2:
+			# print(transition)
 			index = 0
 			to_remove = list(transition.keys())[index]
 			while to_remove == 'qi' or to_remove == 'qf':
@@ -424,7 +424,7 @@ class Automaton:
 						previous_states.append((state, char))
 
 			for char in transition[to_remove]:
-				if transition[to_remove][char][0] != to_remove and transition[to_remove][char][0] is not 'M' and transition[to_remove][char][0] is not 'F':
+				if transition[to_remove][char][0] != to_remove and transition[to_remove][char][0] != 'M' and transition[to_remove][char][0] != 'F':
 					next_states.append((transition[to_remove][char][0], char))
 
 
@@ -445,7 +445,7 @@ class Automaton:
 
 					transition[previous_state[0]][concat] = [next_state[0]]
 
-				if concat is not previous_state[1]:
+				if concat != previous_state[1]:
 					del transition[previous_state[0]][previous_state[1]]
 
 			union = ''
@@ -473,6 +473,7 @@ class Automaton:
 
 
 		key = list(transition['qi'].keys())
+		print("saedwd", transition)
 		return RegularExpression(key[0])
 
 class Grammar:
@@ -620,63 +621,93 @@ class RegularExpression:
 	def __str__(self):
 		return self.expression
 
-	def generate_automaton(self, is_closure=False):
-		expression = self.expression
+	def generate_automaton(self):
+		automaton = Automaton(['qi'], [], {}, 'qi', ['qi'])
+		automaton_aux = Automaton(['qi'], [], {}, 'qi', ['qi'])
+	
+		operation_stack = []
+		union_pending = False
+		open_stack = []
 
-		automata = []
 		i = 0
-		cut = False
-		while i < len(expression):
-			char = expression[i]
-			if char != '(' and char != ')' and char != '*':
-				print(expression)
-				automata.append(self.generate_simple_automaton(char))
-			elif char == '(':
-				end = i
-				while expression[end] != ')':
-					end += 1
+		while True:
+			try:
+				char = self.expression[i]
 
-				try:
-					if expression[end+1] == '*':
-						end += 1
-				except IndexError:
+				if char is '(':
+					open_stack.append(i)
+				elif char is ')':
+					# Resolve scope from open_stack[-1] to i
+					sub_re_str = self.expression[open_stack[-1]:i]
+					sub_re_str = sub_re_str.replace('(', '')
+					sub_re_str = sub_re_str.replace(')', '')
+
+					sub_automaton = RegularExpression(sub_re_str).generate_automaton()
+					after = i+1
+					
+					try:
+						if self.expression[after] is '*':
+							for state in sub_automaton.transition:
+								if state in sub_automaton.accept_states:
+									sub_automaton.transition[state]['&'] = [sub_automaton.initial_state]
+							for state in sub_automaton.accept_states:
+								try:
+									sub_automaton.transition[sub_automaton.initial_state]['&'].append(state)
+								except KeyError:
+									sub_automaton.transition[sub_automaton.initial_state]['&'] = [state]
+
+						elif self.expression[after] is '+':
+							for state in sub_automaton.transition:
+								if state in sub_automaton.accept_states:
+									try:
+										sub_automaton.transition[state]['&'].append(sub_automaton.initial_state)
+									except KeyError:
+										sub_automaton.transition[state]['&'] = [sub_automaton.initial_state]
+						
+						elif self.expression[after] is '?':
+							sub_automaton = sub_automaton | Automaton(['qi'], [], {}, 'qi', ['qi'])
+					except IndexError:
+						pass
+
+					self.expression = self.expression[:open_stack[-1]]+self.expression[i+1:]
+					if union_pending:
+						automaton_aux = automaton_aux + sub_automaton
+					else:
+						automaton = automaton + sub_automaton
+
+
+				elif char is '?' or char is '*' or char is '+':
 					pass
 
-				sub_re = RegularExpression(expression[i:end+1])
+				elif char is '|':
+					if union_pending:
+						automaton = automaton | automaton_aux
+						automaton_aux = Automaton(['qi'], [], {}, 'qi', ['qi'])
+					elif len(open_stack) == 0:
+						union_pending = True
 
-				expression = expression.replace(sub_re.expression, '')
-				cut = True
-				print(expression)
+				
+				elif len(open_stack) == 0:
+					next_char = ''
+					try:
+						next_char = self.expression[i+1]
+					except IndexError:
+						pass
 
-			
-				if sub_re.expression.count('(') == 1:
-					sub_re.expression = sub_re.expression.replace('(', '')
-					sub_re.expression = sub_re.expression.replace(')', '')
+					if union_pending:
+						automaton_aux = automaton_aux + self.generate_simple_automaton(char, next_char)
+					else:
+						automaton = automaton + self.generate_simple_automaton(char, next_char)
+			except IndexError:
+				if union_pending:
+					automaton = automaton | automaton_aux
 
-				next_is_closure = sub_re.expression[-1] == '*'
-				if next_is_closure:
-					sub_re.expression = sub_re.expression[:-1]
-
-				automata.append(sub_re.generate_automaton(next_is_closure))
-				print(expression[i])
-				# i = end
-			if not cut:
-				i += 1
-			cut = False
-
-		final_automaton = automata[0]
-		for i in range(1, len(automata)):
-			final_automaton = final_automaton + automata[i]
-
-		if is_closure:
-			for state in final_automaton.transition:
-				if state in final_automaton.accept_states:
-					final_automaton.transition[state]['&'] = [final_automaton.initial_state]
-
-		return final_automaton
+				return automaton	
 
 
-	def generate_simple_automaton(self, char):
+			i += 1
+
+	def generate_simple_automaton(self, char, next_char=''):
 		states = ['q0', 'q1']
 		alphabet = [char]
 		transition = {
@@ -687,5 +718,15 @@ class RegularExpression:
 		transition['q1'][char] = ['M']
 		initial_state = 'q0'
 		accept_states = ['q1']
+
+		if next_char is '+':
+			transition['q1']['&'] = ['q0']
+		elif next_char is '*':
+			transition['q1']['&'] = ['q0']
+			transition['q0']['&'] = ['q1']
+		elif next_char is '?':
+			print('antes', accept_states)
+			transition['q0']['&'] = ['q1']
+			print('dps', accept_states)
 
 		return Automaton(states, alphabet, transition, initial_state, accept_states)
