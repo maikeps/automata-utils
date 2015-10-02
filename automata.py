@@ -240,6 +240,7 @@ class Automaton:
 
 		union_automaton = Automaton(new_states, new_alphabet, new_transition, new_initial_state, new_accept_states)
 		return union_automaton.determinize().beautify()
+		# return union_automaton
 
 	def concat(self, other):
 		self_deterministic = self.determinize()
@@ -308,6 +309,7 @@ class Automaton:
 
 		concat_automaton = Automaton(new_states, new_alphabet, new_transition, new_initial_state, new_accept_states)
 		return concat_automaton.determinize().beautify()
+		# return concat_automaton
 
 	def beautify(self):
 		new_transition = {}
@@ -628,52 +630,61 @@ class RegularExpression:
 		operation_stack = []
 		union_pending = False
 		open_stack = []
-
 		i = 0
 		while True:
 			try:
 				char = self.expression[i]
 
+
 				if char is '(':
 					open_stack.append(i)
 				elif char is ')':
-					# Resolve scope from open_stack[-1] to i
-					sub_re_str = self.expression[open_stack[-1]:i]
-					sub_re_str = sub_re_str.replace('(', '')
-					sub_re_str = sub_re_str.replace(')', '')
-
-					sub_automaton = RegularExpression(sub_re_str).generate_automaton()
-					after = i+1
-					
-					try:
-						if self.expression[after] is '*':
-							for state in sub_automaton.transition:
-								if state in sub_automaton.accept_states:
-									sub_automaton.transition[state]['&'] = [sub_automaton.initial_state]
-							for state in sub_automaton.accept_states:
-								try:
-									sub_automaton.transition[sub_automaton.initial_state]['&'].append(state)
-								except KeyError:
-									sub_automaton.transition[sub_automaton.initial_state]['&'] = [state]
-
-						elif self.expression[after] is '+':
-							for state in sub_automaton.transition:
-								if state in sub_automaton.accept_states:
-									try:
-										sub_automaton.transition[state]['&'].append(sub_automaton.initial_state)
-									except KeyError:
-										sub_automaton.transition[state]['&'] = [sub_automaton.initial_state]
-						
-						elif self.expression[after] is '?':
-							sub_automaton = sub_automaton | Automaton(['qi'], [], {}, 'qi', ['qi'])
-					except IndexError:
-						pass
-
-					self.expression = self.expression[:open_stack[-1]]+self.expression[i+1:]
-					if union_pending:
-						automaton_aux = automaton_aux + sub_automaton
+					if len(open_stack) > 1:
+						del open_stack[-1]
 					else:
-						automaton = automaton + sub_automaton
+						# Resolve scope from open_stack[-1] to i
+						sub_re_str = self.expression[open_stack[-1]+1:i]
+						sub_automaton = RegularExpression(sub_re_str).generate_automaton()
+						after = i+1
+						
+						try:
+							if self.expression[after] is '*':
+								for state in sub_automaton.transition:
+									if state in sub_automaton.accept_states:
+										sub_automaton.transition[state]['&'] = [sub_automaton.initial_state]
+								for state in sub_automaton.accept_states:
+									try:
+										sub_automaton.transition[sub_automaton.initial_state]['&'].append(state)
+									except KeyError:
+										sub_automaton.transition[sub_automaton.initial_state]['&'] = [state]
+
+								self.expression = self.expression[:after]+self.expression[after+1:]
+
+							elif self.expression[after] is '+':
+								for state in sub_automaton.transition:
+									if state in sub_automaton.accept_states:
+										try:
+											sub_automaton.transition[state]['&'].append(sub_automaton.initial_state)
+										except KeyError:
+											sub_automaton.transition[state]['&'] = [sub_automaton.initial_state]
+
+
+								self.expression = self.expression[:after]+self.expression[after+1:]
+							
+							elif self.expression[after] is '?':
+								sub_automaton = sub_automaton | Automaton(['qi'], [], {}, 'qi', ['qi'])
+
+								self.expression = self.expression[:after]+self.expression[after+1:]
+						except IndexError:
+							pass
+
+
+						if union_pending:
+							automaton_aux = automaton_aux + sub_automaton
+						else:
+							automaton = automaton + sub_automaton
+
+						del open_stack[-1]
 
 
 				elif char is '?' or char is '*' or char is '+':
@@ -687,27 +698,29 @@ class RegularExpression:
 						union_pending = True
 
 				
+				#!{?,*,+,(,),|}
 				elif len(open_stack) == 0:
 					next_char = ''
 					try:
 						next_char = self.expression[i+1]
 					except IndexError:
 						pass
-
 					if union_pending:
 						automaton_aux = automaton_aux + self.generate_simple_automaton(char, next_char)
 					else:
 						automaton = automaton + self.generate_simple_automaton(char, next_char)
+
 			except IndexError:
 				if union_pending:
 					automaton = automaton | automaton_aux
 
-				return automaton	
+				return automaton.determinize().beautify()
 
 
 			i += 1
 
 	def generate_simple_automaton(self, char, next_char=''):
+		
 		states = ['q0', 'q1']
 		alphabet = [char]
 		transition = {
