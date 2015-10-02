@@ -2,9 +2,11 @@ import copy
 import re
 
 class Automaton:
+	"""
+	An automaton is defined formally by a 5-tuple
+	(states, alphabet, transition function, initial state, accept states)
+	"""
 
-	# An automaton is defined formally by a 5-tuple
-	# (states, alphabet, transition function, initial state, accept states)
 	def __init__(self, states, alphabet, transition, initial_state, accept_states):
 		self.states = states
 		self.alphabet = alphabet
@@ -44,7 +46,6 @@ class Automaton:
 		string += "States: "
 		string += "\t{"
 		for i in range(len(self.states)-1):
-		#	if self.states[i] is not 'F' and self.states[i] is not 'M':
 			string += self.states[i]+", "
 		string += self.states[-1]+"}\n"
 
@@ -69,6 +70,11 @@ class Automaton:
 		return self.concat(other)
 
 	def change_state(self, current_states, _input):
+		"""
+		Given the current states and an input,
+		update the current states of the automaton
+		"""
+
 		achieved_states = []
 		deleted_states = []
 
@@ -110,48 +116,80 @@ class Automaton:
 		return self.check_done();
 
 	def determinize(self):
+		"""
+		Determinizes the automaton
+		"""
+
 		new_transition = {}
 		
+		# Calculates the epsilon closure for the initial state
 		initial_closure = self.epsilon(self.initial_state)
 
+		# Adds the calculated closure to the new transition table
+		# Note: add_state is responsible for adding the remaining states
 		self.add_state(initial_closure, self.transition, new_transition)
 
+		# Sets the remaining variables to form an Automaton
 		new_states = [key for key in new_transition]
+		
+		# Build the accept states array
 		new_accept_states = []
 		for state in new_transition:
 			for final_state in self.accept_states:
 				if final_state in state and state not in new_accept_states:
 					new_accept_states.append(state)
 
-
+		# Create and return the automaton
 		return Automaton(new_states, self.alphabet,	new_transition,	''.join(sorted(initial_closure)), new_accept_states)
 
 	def epsilon(self, state):
+		"""
+		Given a state, find its epsilon closure
+		"""
+
 		closure = [state]
 
 		states_aux = [state];
+
 		while True:
 			count = 0
 			next_states = []
+
+			# For each state in the auxiliary states array
 			for state_aux in states_aux:
+				# Gets the epsilon transition as a list of states
 				next_states = self.change_state([state_aux], '&')
+
+				# For each state in this list, check if it's already visited
+				# If not, add a counter and add the state to the closure list
 				for next_state in next_states:
 					if next_state not in closure and next_state is not 'M':
 						count += 1
 						closure.append(next_state)
 			
+			# Sets the auxiliary states list with the contents
+			# Of the epsilon transition
 			states_aux = next_states
 
+			# If the countes is 0, then no new state has been reached
+			# By epsilon transitions, and the closure is found
 			if count == 0:
 				return closure
 
 	def add_state(self, new_state_arr, transition, new_transition):
-		# Add the new transition, with empty info
+		"""
+		Adds recursively a new state to the new transition
+		Based on the existing transition
+		"""
+
+		# Creates a name for the new state
 		new_state_arr = sorted(new_state_arr)
 		new_state_name = ''.join(new_state_arr)
 
+		# Add the new transition with empty info
 		new_transition[new_state_name] = {}
 
+		# For each element in the alphabet
 		for input_aux in self.alphabet:
 			aux = []
 			# Get each possible transition from the new state
@@ -164,18 +202,25 @@ class Automaton:
 							aux = list(set(aux) | set(self.epsilon(item)))
 				except:
 					pass
-				
+			
+			# Add the dead state	
 			if aux == []:
 				aux = ['M']
 
+
+			# Fills the transition table with the newly found state
 			sort = sorted(aux)
 			name = ''.join(sort)
 			new_transition[new_state_name][input_aux] = [name]
 
+			# If it's a non existin state in the transition, adds it
 			if name not in new_transition:
 				self.add_state(sort, transition, new_transition)
 
 	def union(self, other):
+		"""
+		Generates the union between this and the other automaton.
+		"""
 		self_deterministic = self.determinize()
 		self_transition = copy.deepcopy(self_deterministic.transition)
 		other_deterministic = other.determinize()
@@ -231,18 +276,20 @@ class Automaton:
 		for state in self_transition:
 			if state in self_deterministic.accept_states:
 				new_transition[state]['&'] = ['qf']
-
 		for state in other_transition:
 			if state in other_deterministic.accept_states:
 				new_transition[name_map[state]]['&'] = ['qf']
+
 
 		new_states = [state for state in new_transition]
 
 		union_automaton = Automaton(new_states, new_alphabet, new_transition, new_initial_state, new_accept_states)
 		return union_automaton.determinize().beautify()
-		# return union_automaton
 
 	def concat(self, other):
+		"""
+		Generates the concatenation between this and the other automaton.
+		"""
 		self_deterministic = self.determinize()
 		other_deterministic = other.determinize()
 
@@ -309,9 +356,11 @@ class Automaton:
 
 		concat_automaton = Automaton(new_states, new_alphabet, new_transition, new_initial_state, new_accept_states)
 		return concat_automaton.determinize().beautify()
-		# return concat_automaton
 
 	def beautify(self):
+		"""
+		Beautifies the automaton, renaming every state with more readable names
+		"""
 		new_transition = {}
 		new_initial_state = 'q0'
 
@@ -338,24 +387,31 @@ class Automaton:
 		return Automaton(new_states, self.alphabet, new_transition, new_initial_state, new_accept_states)
 
 	def generate_grammar(self):
+		"""
+		Generates the grammar based on the automaton
+		"""
 		automaton = self.determinize()
 
 		production = {}
 		start_symbol = ''
 
+		# Creates the start symbol 
 		if automaton.initial_state in automaton.accept_states:
 			start_symbol = '<S>'
 			production[start_symbol] = ['<'+automaton.initial_state+'>', '&']
 		else:
 			start_symbol = '<'+automaton.initial_state+'>'
 			
+		# Find the non terminal symbols
 		nonterminal = []
 		for item in automaton.states:
 			if item is not 'M' and item is not 'F' and '<'+item+'>' not in nonterminal:
 				nonterminal.append('<'+item+'>')
 
+		# Find the terminal symbols
 		terminal = automaton.alphabet
 
+		# Find the production rules
 		for key in automaton.transition:
 			if key is not 'M' and key is not 'F':
 				prod = ""
@@ -367,6 +423,7 @@ class Automaton:
 						except KeyError:
 							production['<'+key+'>'] = [prod]
 		
+		# Find production rules resulting only in terminal symbols
 		for key in automaton.transition:
 			for character in automaton.transition[key]:
 				for accept_state in automaton.accept_states:
@@ -377,6 +434,10 @@ class Automaton:
 		return Grammar(nonterminal, terminal, production, start_symbol)
 
 	def generate_regular_expression(self):
+		"""
+		Generates a regular expression based on the automaton
+		"""
+
 		# Generate general automaton
 		re = ''
 
@@ -404,13 +465,6 @@ class Automaton:
 		
 		transition = general_automaton.transition
 		state_list = sorted(general_automaton.states)
-
-		# try:
-		# 	del transition['M']
-		# 	del transition['F']
-		# except KeyError:
-		# 	pass
-
 
 
 		while len(transition) > 2:
@@ -467,12 +521,6 @@ class Automaton:
 						concat = '&'
 					elif len(concat) > 1 and '&' in concat and '|&' not in concat:
 						concat = concat.replace('&', '')
-					# if len(concat) > 1:
-					# 	concat = '('+concat+')'
-					# 	if concat[-1] == '*':
-					# 		concat = concat[:-1]+')*'
-					# 	else:
-					# 		concat = concat + ')'
 
 					transition[previous][concat] = [_next]
 
@@ -485,20 +533,12 @@ class Automaton:
 						visited_list[target_state] = char
 					else:
 						char2 = visited_list[target_state]
-						# if len(char) > 1 and char[0] is not '(' and char[-1] is not ')':
-						# 	char = '('+char+')'
-						# if len(char2) > 1:
-						# 	char2 = '('+char2+')'
 						union = char + '|' + char2
-						# if union[-1] == '|':
-						# 	union = union[:-1]
+
 						transition[state][union] = [target_state]
-						# print(state, visited_list[target_state], transition, '\n')
-						# del transition[state][visited_list[target_state]]
 						del transition[state][char]
 
 			# Remove every transition to to_remove
-			# for state in list(transition.keys()):
 			for state in state_list:
 				for char in sorted(list(transition[state].keys())):
 					if transition[state][char][0] == to_remove:
@@ -514,152 +554,11 @@ class Automaton:
 		key = list(transition['qi'].keys())
 		return RegularExpression(key[0])
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		# print(transition)
-		# while len(transition) > 2:
-		# 	# Select state to be removed
-		# 	index = 0
-		# 	states = sorted(list(transition.keys()))
-		# 	to_remove = states[index]
-		# 	while to_remove == 'qi' or to_remove == 'qf':
-		# 		index += 1
-		# 		to_remove = states[index]
-
-		# 	previous_states = []
-		# 	next_states = []
-
-		# 	# Initialize previous states list
-		# 	for state in transition:
-		# 		for char in transition[state]:
-		# 			if transition[state][char][0] == to_remove and state != to_remove:
-		# 				previous_states.append((state, char))
-
-
-
-		# 	# Initialize next states list
-		# 	for char in transition[to_remove]:
-		# 		# if transition[to_remove][char][0] != 'M' and transition[to_remove][char][0] != 'F':
-		# 		if transition[to_remove][char][0] != to_remove and transition[to_remove][char][0] != 'M' and transition[to_remove][char][0] != 'F':
-		# 			next_states.append((transition[to_remove][char][0], char))
-
-
-		# 	# For each state in the previous states list
-		# 	# Link them with each state in the next states list
-		# 	for previous_state in previous_states:
-		# 		concat = ''
-		# 		for next_state in next_states:
-		# 			# print(previous_state[0], next_state[0], 'LLLLLLLLLLLLLLLLL')
-		# 			# if previous_state[0] == to_remove or next_state[0] == to_remove:
-		# 			# 	concat = previous_state[1] + '('+char+')*' + next_state[1]
-		# 			# else:
-		# 			concat = previous_state[1] + '$' + next_state[1]
-		# 			# if len(concat) > 1:
-		# 				# concat = concat.replace('&', '')
-
-		# 			# Check for closure
-		# 			# If there is a loop from to_remove to to_remove,
-		# 			# we replace '$' with the content of the closure
-		# 			for char in transition[to_remove]:
-		# 				if transition[to_remove][char][0] == to_remove:
-		# 					if len(char) > 1:
-		# 						concat = concat.replace('$', '('+char+')*')
-		# 					else:
-		# 						concat = concat.replace('$', ''+char+'*')
-		# 					break
-
-		# 			# If there's no loop, then just remove the '$'
-		# 			if '$' in concat:
-		# 				concat = concat.replace('$', '')
-		# 			if len(concat) > 1:
-		# 				concat = '('+concat+')'
-		# 			transition[previous_state[0]][concat] = [next_state[0]]
-		# 			# (previous_state[0], next_state[0], concat, transition[previous_state[0]][concat][0])
-
-		# 		# if concat != previous_state[1]:
-		# 		# 	del transition[previous_state[0]][previous_state[1]]
-
-		# 	union = ''
-
-		# 	# Handles cases where there's two paths to the same state
-		# 	for previous_state in previous_states:
-		# 		state = previous_state[0]
-		# 		visited_list = {}
-		# 		for char in list(transition[state].keys()):
-		# 			target_state = transition[state][char][0]
-		# 			if target_state not in list(visited_list.keys()):
-		# 				visited_list[target_state] = char
-		# 			else:
-		# 				union = char + '|' + visited_list[target_state]
-		# 				transition[state][union] = [target_state]
-		# 				del transition[state][visited_list[target_state]]
-		# 				del transition[state][char]
-		# 	# print(transition, 'sssssssssssssssssssssssl')
-		# 	del transition[to_remove]
-			
-		# 	print(to_remove, transition)
-			
-		# 	for state in list(transition.keys()):
-		# 		for char in list(transition[state].keys()):
-		# 			if transition[state][char][0] == to_remove:
-		# 				del transition[state][char]
-	
-
-
-			
-
-		# for char in list(transition['qi'].keys()):
-		# 	if transition['qi'][char][0] == 'M':
-		# 		del transition['qi'][char]
-
-
-		# key = list(transition['qi'].keys())
-		# return RegularExpression(key[0])
-
 class Grammar:
+	"""
+	A Grammar is defined formally by a 4-tuple
+	(nonterminal, terminal, production, start_symbol)
+	"""
 	def __init__(self, nonterminal, terminal, production, start_symbol):
 		self.nonterminal = nonterminal
 		self.terminal = terminal
@@ -754,19 +653,36 @@ class Grammar:
 				return True
 
 		return word == self.start_symbol
-
-	# Grammar type 3
+	
 	def generate_automaton(self):
+		"""
+		Generate an Automaton based on the grammar
+		"""
+
+		# Converts each non terminal symbol into a state
 		states = [re.compile(r'<(.*?)>').findall(item)[0] for item in self.nonterminal]
+
+		# Adds the final(F) and dead(M) states
 		states.append('F')
 		states.append('M')
+
 		alphabet = [item for item in self.terminal]
+
+		# Converts the start symbol into an initial state
 		initial_state = re.compile(r'<(.*?)>').findall(self.start_symbol)[0]
 
 		accept_states = ['F']
 		transition = {}
 
+		# For each rule in the production
 		for key in self.production:
+			# Given a rule A -> Bc
+			# Where A and B are non terminal symbols and a is a terminal symbol,
+			# Creates a transition from the state named 'A'
+			# To the state named 'B', by the character 'c'
+			#
+			# If the rule is A -> c
+			# Then create a transition from 'A' to 'F' by 'c'.
 			clean_key = re.compile(r'<(.*?)>').findall(key)[0]
 			transition[clean_key] = {}
 			for item in self.production[key]:
@@ -787,17 +703,21 @@ class Grammar:
 					except KeyError:
 						transition[clean_key][char] = [next_state]
 
+		# Creates the transitions for the dead(M) and final(F) states
 		transition['F'] = {}
 		transition['M'] = {}
 		for char in alphabet:	
 			transition['F'][char] = ['M']
 			transition['M'][char] = ['M']
 
+		# Build the Automaton and returns
 		automaton = Automaton(states, alphabet, transition, initial_state, accept_states)
 		return automaton.determinize()
 
 class RegularExpression:
-
+	"""
+	Regular expressions describe regular languages in formal language theory.
+	"""
 	def __init__(self, expression):
 		self.expression = expression
 
@@ -805,31 +725,47 @@ class RegularExpression:
 		return self.expression
 
 	def generate_automaton(self):
+		"""
+		Generates an Automaton based on the regular expression
+		"""
+
+		# Initially, creates the final Automaton accepting only the empty word
 		automaton = Automaton(['qi'], [], {}, 'qi', ['qi'])
+
+		# Creates an auxiliary Automaton, to be used on union
 		automaton_aux = Automaton(['qi'], [], {}, 'qi', ['qi'])
 	
+		# Auxiliary variables
 		operation_stack = []
 		union_pending = False
 		open_stack = []
 		i = 0
-		while True:
 
+		# Iterates over the expression string
+		while True:
 			try:
 				char = self.expression[i]
 
-
+				# If char is '(' saves it's position on open_stack array
 				if char is '(':
 					open_stack.append(i)
+
+				# If char is ')', we found a closing scope
 				elif char is ')':
+					# If we have already found a '(' before,
+					# Ignore so we can generate the automaton recursively 
+					# For the expression inside the '()' scope.
 					if len(open_stack) > 1:
 						del open_stack[-1]
 					else:
-						# Resolve scope from open_stack[-1] to i
+						# Resolve the expression inside the '()' scope
 						sub_re_str = self.expression[open_stack[-1]+1:i]
 						sub_automaton = RegularExpression(sub_re_str).generate_automaton()
 						after = i+1
 						
 						try:
+							# If the whole scope is a closure, positive closure or &|() (ending with '?''),
+							# Modify the resulting automaton
 							if self.expression[after] is '*':
 								for state in sub_automaton.transition:
 									if state in sub_automaton.accept_states:
@@ -860,12 +796,14 @@ class RegularExpression:
 						except IndexError:
 							pass
 
-
+						# If there's a union pending, only concatenates the generated automaton
+						# To the auxiliary automaton.
 						if union_pending:
 							automaton_aux = automaton_aux + sub_automaton
 						else:
 							automaton = automaton + sub_automaton
 
+						# Finally, remove the reference to the opening scope from the stack
 						del open_stack[-1]
 
 
@@ -873,6 +811,9 @@ class RegularExpression:
 					pass
 
 				elif char is '|':
+					# If there's a union pending and char is '|', 
+					# Generate the union between the final automaton and the auxiliary automaton
+					# Else, that's the first union symbol found, so sets union_pending as True.
 					if union_pending:
 						automaton = automaton | automaton_aux
 						automaton_aux = Automaton(['qi'], [], {}, 'qi', ['qi'])
@@ -880,29 +821,41 @@ class RegularExpression:
 						union_pending = True
 
 				
-				#!{?,*,+,(,),|}
+				# U - {?,*,+,(,),|}
+				# If char is not a special symbol and we are not currently searching for a close scope(')')
+				# Then generates a simple automaton for that char, considering if it's *, + or ?.
 				elif len(open_stack) == 0:
 					next_char = ''
 					try:
 						next_char = self.expression[i+1]
 					except IndexError:
 						pass
+					
+					# If there's a union pending, only concatenates the generated automaton
+					# To the auxiliary automaton.
 					if union_pending:
 						automaton_aux = automaton_aux + self.generate_simple_automaton(char, next_char)
 					else:
 						automaton = automaton + self.generate_simple_automaton(char, next_char)
 
 			except IndexError:
+				# If the while true caused an IndexError, then we have generated everything we need
+				# Lastly, checks if there's still a union pending and generates the union 
 				if union_pending:
 					automaton = automaton | automaton_aux
 
 				return automaton.determinize().beautify()
 
-
+			# Increment the index counter
 			i += 1
 
 	def generate_simple_automaton(self, char, next_char=''):
-		
+		"""
+		Generates a simple automaton that recognizes a single character
+		Also, if it's a closure, positive closure or &|() (ending with '?''),
+		Modify the automaton
+		"""
+
 		states = ['q0', 'q1']
 		alphabet = [char]
 		transition = {
@@ -920,8 +873,6 @@ class RegularExpression:
 			transition['q1']['&'] = ['q0']
 			transition['q0']['&'] = ['q1']
 		elif next_char is '?':
-			print('antes', accept_states)
 			transition['q0']['&'] = ['q1']
-			print('dps', accept_states)
 
 		return Automaton(states, alphabet, transition, initial_state, accept_states)
