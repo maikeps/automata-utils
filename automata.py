@@ -377,6 +377,7 @@ class Automaton:
 		return Grammar(nonterminal, terminal, production, start_symbol)
 
 	def generate_regular_expression(self):
+		# Generate general automaton
 		re = ''
 
 		deterministic = self.determinize();
@@ -402,81 +403,261 @@ class Automaton:
 		general_automaton = Automaton(states, deterministic.alphabet, transition, initial_state, accept_state)
 		
 		transition = general_automaton.transition
-	
-		try:
-			del transition['M']
-			del transition['F']
-		except KeyError:
-			pass
+		state_list = sorted(general_automaton.states)
+
+		# try:
+		# 	del transition['M']
+		# 	del transition['F']
+		# except KeyError:
+		# 	pass
+
+
 
 		while len(transition) > 2:
-			# print(transition)
+			# Select state to be removed
 			index = 0
-			to_remove = list(transition.keys())[index]
+			states = sorted(list(transition.keys()))
+			to_remove = states[index]
 			while to_remove == 'qi' or to_remove == 'qf':
 				index += 1
-				to_remove = list(transition.keys())[index]
+				to_remove = states[index]
 
-			previous_states = []
-			next_states = []
-
-			for state in transition:
-				for char in transition[state]:
+			# Get all states that have a transition to to_remove
+			previous_states = {}
+			for state in state_list:
+				for char in list(sorted(transition[state].keys())):
 					if transition[state][char][0] == to_remove and state != to_remove:
-						previous_states.append((state, char))
+						previous_states[state] = char
 
-			for char in transition[to_remove]:
-				if transition[to_remove][char][0] != to_remove and transition[to_remove][char][0] != 'M' and transition[to_remove][char][0] != 'F':
-					next_states.append((transition[to_remove][char][0], char))
+			# Get all states that to_remove have a transition to
+			next_states = {}
+			for char in list(sorted(transition[to_remove].keys())):
+				for state in transition[to_remove][char]:
+					if state != to_remove:
+						next_states[state] = char
 
-
-
-			for previous_state in previous_states:
+			# For each state in the previous states list
+			# Link them with each state in the next states list
+			for previous in list(sorted(previous_states.keys())):
 				concat = ''
-				for next_state in next_states:
-					concat = previous_state[1] + '$' + next_state[1]
-					concat = concat.replace('&', '')
+				for _next in list(sorted(next_states.keys())):
+					next_char = next_states[_next]
+					previous_char = previous_states[previous]
 
-					for char in transition[to_remove]:
-						if to_remove == transition[to_remove][char][0]:
-							concat = concat.replace('$', '('+char+')*')
-							break
+					if len(next_char) > 1:
+						next_char = '('+next_char+')'
+					if len(previous_char) > 1:
+						previous_char = '('+previous_char+')'
 
-					if '$' in concat:
-						concat = concat.replace('$', '')
+					concat = previous_char + '$' + next_char
+					
+					# Check for closure
+					# If there is a loop from to_remove to to_remove,
+					# we replace '$' with the content of the closure
+					for char in list(sorted(transition[to_remove].keys())):
+						if transition[to_remove][char][0] == to_remove:
+							if len(char) == 1:
+								concat = concat.replace('$', ''+char+'*')
+							else:
+								concat = concat.replace('$', '('+char+')*')
 
-					transition[previous_state[0]][concat] = [next_state[0]]
+					concat = concat.replace('$', '')
 
-				if concat != previous_state[1]:
-					del transition[previous_state[0]][previous_state[1]]
+					if concat == '&&':
+						concat = '&'
+					elif len(concat) > 1 and '&' in concat and '|&' not in concat:
+						concat = concat.replace('&', '')
+					# if len(concat) > 1:
+					# 	concat = '('+concat+')'
+					# 	if concat[-1] == '*':
+					# 		concat = concat[:-1]+')*'
+					# 	else:
+					# 		concat = concat + ')'
 
-			union = ''
+					transition[previous][concat] = [_next]
 
-			for previous_state in previous_states:
-				state = previous_state[0]
-				for char in list(transition[state].keys()):
-					aux = transition[state][char]
-					for char2 in list(transition[state].keys()):
-						if aux == transition[state][char2] and char != char2:
-							union = char + '|' + char2
-							transition[state][union] = transition[state][char]
-							del transition[state][char]
-							del transition[state][char2]
-							break
-					if union != '':
-						break
+			# Handles cases where there's two paths to the same state
+			for state in sorted(list(previous_states.keys())):
+				visited_list = {}
+				for char in sorted(list(transition[state].keys())):
+					target_state = transition[state][char][0]
+					if target_state not in list(visited_list.keys()):
+						visited_list[target_state] = char
+					else:
+						char2 = visited_list[target_state]
+						# if len(char) > 1 and char[0] is not '(' and char[-1] is not ')':
+						# 	char = '('+char+')'
+						# if len(char2) > 1:
+						# 	char2 = '('+char2+')'
+						union = char + '|' + char2
+						# if union[-1] == '|':
+						# 	union = union[:-1]
+						transition[state][union] = [target_state]
+						# print(state, visited_list[target_state], transition, '\n')
+						# del transition[state][visited_list[target_state]]
+						del transition[state][char]
+
+			# Remove every transition to to_remove
+			# for state in list(transition.keys()):
+			for state in state_list:
+				for char in sorted(list(transition[state].keys())):
+					if transition[state][char][0] == to_remove:
+						del transition[state][char]
+
+			# Finally remove the state
 			del transition[to_remove]
+
+			# Update the state list
+			state_list = sorted(list(transition.keys()))
+
+		# Get the resulting regular expression
+		key = list(transition['qi'].keys())
+		return RegularExpression(key[0])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		# print(transition)
+		# while len(transition) > 2:
+		# 	# Select state to be removed
+		# 	index = 0
+		# 	states = sorted(list(transition.keys()))
+		# 	to_remove = states[index]
+		# 	while to_remove == 'qi' or to_remove == 'qf':
+		# 		index += 1
+		# 		to_remove = states[index]
+
+		# 	previous_states = []
+		# 	next_states = []
+
+		# 	# Initialize previous states list
+		# 	for state in transition:
+		# 		for char in transition[state]:
+		# 			if transition[state][char][0] == to_remove and state != to_remove:
+		# 				previous_states.append((state, char))
+
+
+
+		# 	# Initialize next states list
+		# 	for char in transition[to_remove]:
+		# 		# if transition[to_remove][char][0] != 'M' and transition[to_remove][char][0] != 'F':
+		# 		if transition[to_remove][char][0] != to_remove and transition[to_remove][char][0] != 'M' and transition[to_remove][char][0] != 'F':
+		# 			next_states.append((transition[to_remove][char][0], char))
+
+
+		# 	# For each state in the previous states list
+		# 	# Link them with each state in the next states list
+		# 	for previous_state in previous_states:
+		# 		concat = ''
+		# 		for next_state in next_states:
+		# 			# print(previous_state[0], next_state[0], 'LLLLLLLLLLLLLLLLL')
+		# 			# if previous_state[0] == to_remove or next_state[0] == to_remove:
+		# 			# 	concat = previous_state[1] + '('+char+')*' + next_state[1]
+		# 			# else:
+		# 			concat = previous_state[1] + '$' + next_state[1]
+		# 			# if len(concat) > 1:
+		# 				# concat = concat.replace('&', '')
+
+		# 			# Check for closure
+		# 			# If there is a loop from to_remove to to_remove,
+		# 			# we replace '$' with the content of the closure
+		# 			for char in transition[to_remove]:
+		# 				if transition[to_remove][char][0] == to_remove:
+		# 					if len(char) > 1:
+		# 						concat = concat.replace('$', '('+char+')*')
+		# 					else:
+		# 						concat = concat.replace('$', ''+char+'*')
+		# 					break
+
+		# 			# If there's no loop, then just remove the '$'
+		# 			if '$' in concat:
+		# 				concat = concat.replace('$', '')
+		# 			if len(concat) > 1:
+		# 				concat = '('+concat+')'
+		# 			transition[previous_state[0]][concat] = [next_state[0]]
+		# 			# (previous_state[0], next_state[0], concat, transition[previous_state[0]][concat][0])
+
+		# 		# if concat != previous_state[1]:
+		# 		# 	del transition[previous_state[0]][previous_state[1]]
+
+		# 	union = ''
+
+		# 	# Handles cases where there's two paths to the same state
+		# 	for previous_state in previous_states:
+		# 		state = previous_state[0]
+		# 		visited_list = {}
+		# 		for char in list(transition[state].keys()):
+		# 			target_state = transition[state][char][0]
+		# 			if target_state not in list(visited_list.keys()):
+		# 				visited_list[target_state] = char
+		# 			else:
+		# 				union = char + '|' + visited_list[target_state]
+		# 				transition[state][union] = [target_state]
+		# 				del transition[state][visited_list[target_state]]
+		# 				del transition[state][char]
+		# 	# print(transition, 'sssssssssssssssssssssssl')
+		# 	del transition[to_remove]
+			
+		# 	print(to_remove, transition)
+			
+		# 	for state in list(transition.keys()):
+		# 		for char in list(transition[state].keys()):
+		# 			if transition[state][char][0] == to_remove:
+		# 				del transition[state][char]
+	
+
+
 			
 
-		for char in list(transition['qi'].keys()):
-			if transition['qi'][char][0] == 'M':
-				del transition['qi'][char]
+		# for char in list(transition['qi'].keys()):
+		# 	if transition['qi'][char][0] == 'M':
+		# 		del transition['qi'][char]
 
 
-
-		key = list(transition['qi'].keys())
-		print("saedwd", transition)
-		return RegularExpression(key[0])
+		# key = list(transition['qi'].keys())
+		# return RegularExpression(key[0])
 
 class Grammar:
 	def __init__(self, nonterminal, terminal, production, start_symbol):
@@ -632,6 +813,7 @@ class RegularExpression:
 		open_stack = []
 		i = 0
 		while True:
+
 			try:
 				char = self.expression[i]
 
