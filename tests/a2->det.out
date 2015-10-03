@@ -1,0 +1,1 @@
+{"alphabet": ["a", "b"], "accept_states": ["pqr"], "transition": {"qs": {"a": ["qs"], "b": ["M"]}, "pqr": {"a": ["qs"], "b": ["rs"]}, "M": {"a": ["M"], "b": ["M"]}, "rs": {"a": ["M"], "b": ["rs"]}}, "initial_state": "pqr", "type": "automaton", "states": ["qs", "pqr", "M", "rs"]}

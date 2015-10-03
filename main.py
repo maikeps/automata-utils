@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 import json
+
 from automata import Automaton
 from automata import Grammar
 from automata import RegularExpression
@@ -108,14 +109,12 @@ def process_save(which, target_src):
 
 def proccess_print(which):
 	if which == 'current':
-		print(current)
+		print(current, '\n')
 	elif which == 'conversion':
-		print(conversion)
+		print(conversion, '\n')
 	else:
 		print('Command not found.')
 
-def show_help():
-	print("Help")
 
 if __name__ == '__main__':
 	command = ""
@@ -134,8 +133,8 @@ if __name__ == '__main__':
 			elif args[0] == 'convert':
 				try:
 					conversion = process_conversion(current, args[1])
-				# except NameError:
-				# 	print('Error: File not yet loaded.')
+				except NameError:
+					print('Error: File not yet loaded.')
 				except AttributeError:
 					if file_type != 'automaton':
 						print('Error: Can only convert automata to their deterministic form.')
@@ -160,11 +159,18 @@ if __name__ == '__main__':
 					elif args[1] == 'conversion':
 						print('Error: File not yet converted.')
 
-			elif args[0] == 'exit':
-				break
+			elif args[0] == 'refresh':
+				try:
+					current = conversion
+					conversion = None
 
-			elif args[0] == 'help':
-				show_help()
+					print("You are now working with "+current.__class__.__name__)
+				except NameError:
+					print('Error: File not yet converted.')
+
+			elif args[0] == 'exit':
+				print("Bye.")
+				break
 
 			else:
 				print('Command not found.')

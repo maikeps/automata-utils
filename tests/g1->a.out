@@ -1,0 +1,1 @@
+{"initial_state": "S", "accept_states": [], "type": "automaton", "transition": {"M": {"b": ["M"], "a": ["M"]}, "S": {"b": ["M"], "a": ["M"]}}, "alphabet": ["a", "b"], "states": ["M", "S"]}

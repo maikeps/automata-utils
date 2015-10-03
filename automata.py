@@ -656,11 +656,16 @@ class Grammar:
 	
 	def generate_automaton(self):
 		"""
-		Generate an Automaton based on the grammar
+		Generate an Automaton based on the Grammar
 		"""
-
 		# Converts each non terminal symbol into a state
-		states = [re.compile(r'<(.*?)>').findall(item)[0] for item in self.nonterminal]
+		# states = [re.compile(r'<(.*?)>').findall(item)[0] for item in self.nonterminal]
+		states = []
+		for item in self.nonterminal:
+			try:
+				states.append(re.compile(r'<(.*?)>').findall(item)[0])
+			except IndexError:
+				states.append(item)
 
 		# Adds the final(F) and dead(M) states
 		states.append('F')
@@ -669,7 +674,10 @@ class Grammar:
 		alphabet = [item for item in self.terminal]
 
 		# Converts the start symbol into an initial state
-		initial_state = re.compile(r'<(.*?)>').findall(self.start_symbol)[0]
+		try:
+			initial_state = re.compile(r'<(.*?)>').findall(self.start_symbol)[0]
+		except IndexError:
+			initial_state = self.start_symbol
 
 		accept_states = ['F']
 		transition = {}
@@ -683,7 +691,10 @@ class Grammar:
 			#
 			# If the rule is A -> c
 			# Then create a transition from 'A' to 'F' by 'c'.
-			clean_key = re.compile(r'<(.*?)>').findall(key)[0]
+			try:
+				clean_key = re.compile(r'<(.*?)>').findall(key)[0]
+			except IndexError:
+				clean_key = key
 			transition[clean_key] = {}
 			for item in self.production[key]:
 				if item in self.terminal or item == '&':
@@ -692,8 +703,15 @@ class Grammar:
 					except KeyError:
 						transition[clean_key][item] = ['F']
 				else:
-					next_state = re.compile(r'<(.*?)>').findall(item)[0]
-					char = re.compile(r'(.*?)<'+next_state+'>').findall(item)[0]
+					try:
+						next_state = re.compile(r'<(.*?)>').findall(item)[0]
+					except IndexError:
+						next_state = item
+					try:
+						char = re.compile(r'(.*?)<'+next_state+'>').findall(item)[0]
+					except IndexError:
+						char = item
+			# print("SSSSSSSSSSSSSSSSSSSS 	ggenerate_automaton")
 
 					if char == '':
 						char = '&'

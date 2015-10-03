@@ -1,0 +1,10 @@
+{
+	"type": "grammar",
+	"start_symbol": "S",
+	"terminal": ["a", "b"],
+	"nonterminal": ["S", "A"],
+	"production": {
+		"S": ["aA", "bS"],
+		"A": ["aS", "bA", "a"]
+	}
+}
