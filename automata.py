@@ -140,7 +140,7 @@ class Automaton:
 					new_accept_states.append(state)
 
 		# Create and return the automaton
-		return Automaton(new_states, self.alphabet,	new_transition,	''.join(sorted(initial_closure)), new_accept_states)
+		return Automaton(new_states, self.alphabet,	new_transition,	''.join(sorted(initial_closure)), new_accept_states).beautify()
 
 	def epsilon(self, state):
 		"""
@@ -553,6 +553,56 @@ class Automaton:
 		# Get the resulting regular expression
 		key = list(transition['qi'].keys())
 		return RegularExpression(key[0])
+
+
+	def minimize(self):
+		automaton = self.determinize()
+		print(automaton)
+		automaton = automaton.remove_unreachable()
+
+		# sets = [automaton.accept_states, list(set(automaton.states) - set(automaton.accept_states) - {"M"})]
+		# aux_sets = []
+
+		# while sets != aux_sets:
+		# 	for item in sets:
+		# 		if len(item) == 1:
+		# 			aux_sets.append(item)
+		# 		else:
+		# 			for state in item:
+		# 				next_state = automaton.transition[state]
+
+		print(automaton)
+
+	def remove_unreachable(self):
+		reached_states = [self.initial_state]
+		current_states = [self.initial_state]
+
+		while True:
+			new_states_count = 0
+			next_states = []
+
+			# Find out which states I can get to
+			for state in current_states:
+				for input in self.transition[state]:
+					aux = self.change_state([state], input)
+					for item in aux:
+						if item not in next_states:
+							next_states.append(item)
+
+			for state in next_states:
+				if state not in reached_states:
+					new_states_count += 1
+					reached_states.append(state)
+
+			if new_states_count == 0:
+				new_transition = copy.deepcopy(self.transition)
+				for item in set(self.states)-set(reached_states):
+					del new_transition[item]
+				new_accept_states = [item for item in self.accept_states if item in reached_states]
+
+				return Automaton(reached_states, self.alphabet, new_transition, self.initial_state, new_accept_states)
+
+
 
 class Grammar:
 	"""
