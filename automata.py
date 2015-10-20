@@ -585,11 +585,11 @@ class Automaton:
 		states = [''.join(item) for item in equivalences]
 		alphabet = self.alphabet
 
-		return Automaton(states, self.alphabet, transition, initial_state, accept_states)
+		return Automaton(states, self.alphabet, transition, initial_state, accept_states).beautify()
 
 	def find_equivalences(self):
-		# automaton = self.determinize()
-		automaton = self.remove_unreachable()
+		automaton = self.determinize()
+		automaton = automaton.remove_unreachable()
 	
 		sets = [automaton.accept_states, list(set(automaton.states) - set(automaton.accept_states) - {"M"})]
 		aux_sets = []
