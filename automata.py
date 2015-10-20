@@ -554,36 +554,85 @@ class Automaton:
 		key = list(transition['qi'].keys())
 		return RegularExpression(key[0])
 
-
 	def minimize(self):
-		automaton = self.determinize()
-		print(automaton)
-		automaton = automaton.remove_unreachable()
+		equivalences = self.find_equivalences()
 
-		# sets = [automaton.accept_states, list(set(automaton.states) - set(automaton.accept_states) - {"M"})]
-		# aux_sets = []
+		transition = {}
+		for item in equivalences:
+			state_name = ''.join(item)
+			transition[state_name] = {}
+			for char in self.alphabet:
+				next_state = self.transition[item[0]][char][0]
+				next_state_eq = next_state
+				for eq in equivalences:
+					if next_state in eq:
+						next_state_eq = eq
+				transition[state_name][char] = [''.join(next_state_eq)]
 
-		# while sets != aux_sets:
-		# 	for item in sets:
-		# 		if len(item) == 1:
-		# 			aux_sets.append(item)
-		# 		else:
-		# 			for state in item:
-		# 				next_state = automaton.transition[state]
+		initial_state = ''
+		for item in equivalences:
+			if self.initial_state in item:
+				initial_state = ''.join(item)
+				break
 
-		print(automaton)
+		accept_states = []
+		for item in equivalences:
+			for state in self.accept_states:
+				if state in item:
+					accept_states.append(''.join(item))
+					break
 
+		states = [''.join(item) for item in equivalences]
+		alphabet = self.alphabet
+
+		return Automaton(states, self.alphabet, transition, initial_state, accept_states)
+
+	def find_equivalences(self):
+		# automaton = self.determinize()
+		automaton = self.remove_unreachable()
+	
+		sets = [automaton.accept_states, list(set(automaton.states) - set(automaton.accept_states) - {"M"})]
+		aux_sets = []
+		
+		while True:
+			for char in automaton.alphabet:
+				for subset in sets:
+					if len(subset) == 1:
+						aux_sets.append(subset)
+					else:
+						for state in subset:
+							next_state = automaton.transition[state][char][0]
+							has_equivalent = False
+							# Find where to put state
+							for subset_aux in aux_sets:
+								if subset_aux not in sets:
+									next_state_aux = automaton.transition[subset_aux[0]][char][0]
+									for conjunto in sets:
+										if next_state in conjunto and next_state_aux in conjunto:
+											has_equivalent = True
+											subset_aux.append(state)
+		
+							if not has_equivalent:
+								aux_sets.append([state])
+				
+				if sets == aux_sets:
+
+					return sets
+
+				sets = aux_sets
+				aux_sets = []					
+	
 	def remove_unreachable(self):
 		reached_states = [self.initial_state]
-		current_states = [self.initial_state]
 
 		while True:
+			current_states = reached_states
 			new_states_count = 0
 			next_states = []
 
 			# Find out which states I can get to
 			for state in current_states:
-				for input in self.transition[state]:
+				for input in self.alphabet:
 					aux = self.change_state([state], input)
 					for item in aux:
 						if item not in next_states:
@@ -593,7 +642,7 @@ class Automaton:
 				if state not in reached_states:
 					new_states_count += 1
 					reached_states.append(state)
-
+		
 			if new_states_count == 0:
 				new_transition = copy.deepcopy(self.transition)
 				for item in set(self.states)-set(reached_states):
@@ -761,8 +810,7 @@ class Grammar:
 						char = re.compile(r'(.*?)<'+next_state+'>').findall(item)[0]
 					except IndexError:
 						char = item
-			# print("SSSSSSSSSSSSSSSSSSSS 	ggenerate_automaton")
-
+			
 					if char == '':
 						char = '&'
 

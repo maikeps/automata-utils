@@ -140,7 +140,16 @@ if __name__ == '__main__':
 						print('Error: Can only convert automata to their deterministic form.')
 					else:
 						print('Error: Cannot convert '+file_type+' into '+args[1])
-		
+			
+			elif args[0] == 'minimize':
+				# try:
+				conversion = current.minimize()
+				# except NameError:
+				# 	print('Error: File not yet loaded.')
+				# except AttributeError:
+				# 	if file_type != 'automaton':
+				# 		print('Error: Only automata have the minimize function.')
+				
 			elif args[0] == 'save':
 				try:
 					process_save(args[1], args[2])
