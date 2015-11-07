@@ -101,14 +101,16 @@ def gen_lex():
 	ids = ids.minimize()
 	sep = sep.minimize()
 
-	print(((const | ids | op).determinize() | pr | sep).determinize())
+	# print(((const | ids | op).determinize() | pr | sep).determinize())
 
-	lex = pr | const | ids | sep | op# | declvar 
+	lex = ((const | ids | op).determinize() | pr | sep).determinize()# | declvar 
 	# lex = pr.union(op, True).union(ids, True).union(sep, True).union(const, True)# | declvar 
 	# lex = pr | declvar | const | op | ids | sep
 
+	print(lex.alphabet)
 	reader.save_file('caspal/lex', lex)
-
+	print(lex)
+	print('save_file')
 def analyze(src):
 	program = ' '.join(reader.read_file(src))
 	lex = reader.open_file('caspal/lex')[1]

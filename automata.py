@@ -133,6 +133,7 @@ class Automaton:
 
 		# Adds the calculated closure to the new transition table
 		# Note: add_state is responsible for adding the remaining states
+		new_final_states = []
 		self.add_state(initial_closure, self.transition, new_transition)
 
 		# Sets the remaining variables to form an Automaton
@@ -142,7 +143,7 @@ class Automaton:
 		new_accept_states = []
 		for state in new_transition:
 			for final_state in self.accept_states:
-				if final_state in state and state not in new_accept_states:
+				if final_state in state and state not in new_accept_states and len(state) == len(final_state):
 					new_accept_states.append(state)
 
 		# Create and return the automaton
@@ -191,6 +192,11 @@ class Automaton:
 		# Creates a name for the new state
 		new_state_arr = sorted(new_state_arr)
 		new_state_name = ''.join(new_state_arr)
+
+		# print(transition.keys(), self.accept_states, new_transition.keys(), new_final_states)
+		# for state in transition.keys():
+		# 	if state in self.accept_states and state not in new_final_states:
+		# 		new_final_states.append(state)
 
 		# Add the new transition with empty info
 		new_transition[new_state_name] = {}
@@ -466,6 +472,7 @@ class Automaton:
 		new_states = [state for state in new_transition]
 		new_accept_states = [name_map[state] for state in self.accept_states]
 
+
 		return Automaton(new_states, self.alphabet, new_transition, new_initial_state, new_accept_states)
 
 	def generate_grammar(self):
@@ -677,7 +684,6 @@ class Automaton:
 		kf = list(set(automaton.states)-set(f))
 		# f = automaton.accept_states
 		# kf = list(set(automaton.transition.keys())-set(f))
-
 		eq = [f, kf]
 		new_eq = []
 
