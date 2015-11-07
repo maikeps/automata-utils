@@ -107,18 +107,13 @@ def gen_lex():
 	# lex = pr.union(op, True).union(ids, True).union(sep, True).union(const, True)# | declvar 
 	# lex = pr | declvar | const | op | ids | sep
 
-	print(lex.alphabet)
 	reader.save_file('caspal/lex', lex)
-	print(lex)
-	print('save_file')
+	
 def analyze(src):
 	program = ' '.join(reader.read_file(src))
 	lex = reader.open_file('caspal/lex')[1]
 	print(program)
 	print(lex.analyze(program))
 
-gen_lex()
+# gen_lex()
 analyze('caspal/test.csp')
-
-# print(lex)
-# print(lex.analyze('grampro 3123214;'))

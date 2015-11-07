@@ -799,8 +799,8 @@ class Automaton:
 			# 	next_state = self.change_state(self.current_states, char)
 			# else:
 			# 	word += char
-
-		tokens.append((word, self.current_states[0]))
+			
+		# tokens.append((word, self.current_states[0]))
 
 		return tokens
 
