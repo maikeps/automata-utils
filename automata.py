@@ -1061,7 +1061,7 @@ class RegularExpression:
 								self.expression = self.expression[:after]+self.expression[after+1:]
 							
 							elif self.expression[after] is '?':
-								sub_automaton = sub_automaton | Automaton(['qi'], [], {}, 'qi', ['qi'])
+								sub_automaton = (sub_automaton | Automaton(['qi'], [], {}, 'qi', ['qi'])).determinize().beautify()
 
 								self.expression = self.expression[:after]+self.expression[after+1:]
 						except IndexError:
@@ -1073,6 +1073,7 @@ class RegularExpression:
 							automaton_aux = automaton_aux + sub_automaton
 						else:
 							automaton = automaton + sub_automaton
+							print('>>>>>>>>>>>>>.', sub_automaton)
 
 						# Finally, remove the reference to the opening scope from the stack
 						del open_stack[-1]
@@ -1086,7 +1087,7 @@ class RegularExpression:
 					# Generate the union between the final automaton and the auxiliary automaton
 					# Else, that's the first union symbol found, so sets union_pending as True.
 					if union_pending:
-						automaton = automaton | automaton_aux
+						automaton = (automaton | automaton_aux).determinize().beautify()
 						automaton_aux = Automaton(['qi'], [], {}, 'qi', ['qi'])
 					elif len(open_stack) == 0:
 						union_pending = True
@@ -1115,6 +1116,7 @@ class RegularExpression:
 				if union_pending:
 					automaton = automaton | automaton_aux
 
+				print(automaton)
 				return automaton.determinize().beautify()
 
 			# Increment the index counter

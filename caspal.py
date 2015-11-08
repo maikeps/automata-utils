@@ -18,14 +18,20 @@ def gen_lex():
 	adre = RE('adre').generate_automaton()
 	tewri = RE('tewri').generate_automaton()
 
-  # pr = grampro | rav | ginbe | ned | rof | od | fi | enth | seel | adre | tewri
-	# pr = (grampro | rav | ginbe ).determinize() #| ned | rof).determinize() | od | fi).determinize() | enth | seel).determinize() | adre | tewri).determinize()
-	pr = (grampro | rav).determinize()
-	print(pr.accept_states)
-	pr.minimize()
-	print(pr.accept_states)
+	# pr = grampro | rav | ginbe | ned | rof | od | fi | enth | seel | adre | tewri
+	# pr = (grampro | rav | ginbe ).determinize() | ned | rof).determinize() | od | fi).determinize() | enth | seel).determinize() | adre | tewri).determinize()
+	pr = (grampro | rav | ginbe).determinize()
+	pr = (pr | ned | rof).determinize()
+	pr = (pr | od | fi).determinize()
+	pr = (pr | enth | seel).determinize()
+	pr = (pr | adre | tewri).determinize()
+	# pr = (grampro | rav).determinize()
+	# print(pr.accept_states)
+	pr = pr.minimize()
+
+	# print(pr.accept_states)
 	# print(pr)
-	reader.save_file('caspal/pr', pr)
+	# reader.save_file('caspal/pr', pr)
 
 	# print(pr)
 	# DeclVar
@@ -72,7 +78,8 @@ def gen_lex():
 
 	# ID
 	# di = RE('(q|w|e|r|t|y|u|i|o|p|a|s|d|f|g|h|j|k|l|z|x|c|v|b|n|m|Q|W|E|R|T|Y|U|I|O|P|A|S|D|F|G|H|J|K|L|Z|X|C|V|B|N|M|_)(q|w|e|r|t|y|u|i|o|p|a|s|d|f|g|h|j|k|l|z|x|c|v|b|n|m|Q|W|E|R|T|Y|U|I|O|P|A|S|D|F|G|H|J|K|L|Z|X|C|V|B|N|M|_|1|2|3|4|5|6|7|8|9|0)*').generate_automaton()
-	di = RE('a|b').generate_automaton()
+	di = RE('(a|b)*').generate_automaton()
+	print(di)
 
 	# SEP
 	space = RE(' ').generate_automaton()
@@ -100,9 +107,10 @@ def gen_lex():
 
 	# pr = fi | enth
 	ids = di
-	sep = space | semicolon
+	sep = space | semicolon | dot
 	op = ass | add | grt
 	const = a
+	declvar = tegerin
 
 
 	# pr = pr.minimize()
@@ -112,11 +120,15 @@ def gen_lex():
 	op = op.minimize()
 	ids = ids.minimize()
 	sep = sep.minimize()
+	declvar = declvar.minimize()
 
-	print(sep)
+	# print(sep)
 	# print(((const | ids | op).determinize() | pr | sep).determinize())
 
-	lex = ((const | ids | op).determinize() | pr | sep).determinize()# | declvar 
+	lex = (((const | ids | op).determinize() | pr | sep).determinize() | declvar).determinize()
+	lex = rename(lex)
+
+
 	# lex = pr.union(op, True).union(ids, True).union(sep, True).union(const, True)# | declvar 
 	# lex = pr | declvar | const | op | ids | sep
 
@@ -125,8 +137,127 @@ def gen_lex():
 def analyze(src):
 	program = ' '.join(reader.read_file(src))
 	lex = reader.open_file('caspal/lex')[1]
+
 	print(program)
 	print(lex.analyze(program))
 
+def rename(automaton):
+	# PR
+	automaton.verify_word('grampro')
+	accept_state = automaton.current_states[0]
+
+	for state in automaton.transition:
+		for char in automaton.transition[state]:
+			if accept_state in automaton.transition[state][char]:
+				automaton.transition[state][char] = ['PR']
+
+	automaton.transition['PR'] = automaton.transition[accept_state]
+	del automaton.transition[accept_state]
+
+	automaton.accept_states.append('PR')
+	automaton.accept_states.remove(accept_state)
+
+	automaton.states.append('PR')
+	automaton.states.remove(accept_state)
+
+	
+	# OP
+	automaton.verify_word('=')
+	accept_state = automaton.current_states[0]
+
+	for state in automaton.transition:
+		for char in automaton.transition[state]:
+			if accept_state in automaton.transition[state][char]:
+				automaton.transition[state][char] = ['OP']
+
+	automaton.transition['OP'] = automaton.transition[accept_state]
+	del automaton.transition[accept_state]
+
+	automaton.accept_states.append('OP')
+	automaton.accept_states.remove(accept_state)
+
+	automaton.states.append('OP')
+	automaton.states.remove(accept_state)
+
+	
+	# DECLVAR
+	automaton.verify_word('tegerin')
+	accept_state = automaton.current_states[0]
+
+	for state in automaton.transition:
+		for char in automaton.transition[state]:
+			if accept_state in automaton.transition[state][char]:
+				automaton.transition[state][char] = ['DECLVAR']
+
+	automaton.transition['DECLVAR'] = automaton.transition[accept_state]
+	del automaton.transition[accept_state]
+
+	automaton.accept_states.append('DECLVAR')
+	automaton.accept_states.remove(accept_state)
+
+	automaton.states.append('DECLVAR')
+	automaton.states.remove(accept_state)
+
+	
+	# SEP
+	automaton.verify_word(' ')
+	accept_state = automaton.current_states[0]
+
+	for state in automaton.transition:
+		for char in automaton.transition[state]:
+			if accept_state in automaton.transition[state][char]:
+				automaton.transition[state][char] = ['SEP']
+
+	automaton.transition['SEP'] = automaton.transition[accept_state]
+	del automaton.transition[accept_state]
+
+	automaton.accept_states.append('SEP')
+	automaton.accept_states.remove(accept_state)
+
+	automaton.states.append('SEP')
+	automaton.states.remove(accept_state)
+
+	
+	# ID
+	automaton.verify_word('b')
+	accept_state = automaton.current_states[0]
+
+	for state in automaton.transition:
+		for char in automaton.transition[state]:
+			if accept_state in automaton.transition[state][char]:
+				automaton.transition[state][char] = ['ID']
+
+	automaton.transition['ID'] = automaton.transition[accept_state]
+	del automaton.transition[accept_state]
+
+	automaton.accept_states.append('ID')
+	automaton.accept_states.remove(accept_state)
+
+	automaton.states.append('ID')
+	automaton.states.remove(accept_state)
+
+	
+	# CONST
+	automaton.verify_word('1')
+	accept_state = automaton.current_states[0]
+
+	for state in automaton.transition:
+		for char in automaton.transition[state]:
+			if accept_state in automaton.transition[state][char]:
+				automaton.transition[state][char] = ['CONST']
+
+	automaton.transition['CONST'] = automaton.transition[accept_state]
+	del automaton.transition[accept_state]
+
+	automaton.accept_states.append('CONST')
+	automaton.accept_states.remove(accept_state)
+
+	automaton.states.append('CONST')
+	automaton.states.remove(accept_state)
+
+
+	return automaton
+
 gen_lex()
-# analyze('caspal/test.csp')
+analyze('caspal/test.csp')
+# di = RE('(a|b)*').generate_automaton()
