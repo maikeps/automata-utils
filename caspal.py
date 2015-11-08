@@ -18,6 +18,16 @@ def gen_lex():
 	adre = RE('adre').generate_automaton()
 	tewri = RE('tewri').generate_automaton()
 
+  # pr = grampro | rav | ginbe | ned | rof | od | fi | enth | seel | adre | tewri
+	# pr = (grampro | rav | ginbe ).determinize() #| ned | rof).determinize() | od | fi).determinize() | enth | seel).determinize() | adre | tewri).determinize()
+	pr = (grampro | rav).determinize()
+	print(pr.accept_states)
+	pr.minimize()
+	print(pr.accept_states)
+	# print(pr)
+	reader.save_file('caspal/pr', pr)
+
+	# print(pr)
 	# DeclVar
 	tegerin = RE('tegerin').generate_automaton()
 	leanboo = RE('leanboo').generate_automaton()
@@ -25,6 +35,8 @@ def gen_lex():
 	tegerin_arr = RE('tegerin[]').generate_automaton()
 	leanboo_arr = RE('leanboo[]').generate_automaton()
 	ingstr_arr = RE('ingstr[]').generate_automaton()
+
+	# declvar = tegerin | leanboo | ingstr | tegerin_arr | leanboo_arr | ingstr_arr
 
 
 	# CONST
@@ -41,6 +53,7 @@ def gen_lex():
 	aaaaaaaa = RE('8').generate_automaton()
 	aaaaaaaaa = RE('9').generate_automaton()
 	string = RE('\'(q|w|e|r|t|y|u|i|o|p|a|s|d|f|g|h|j|k|l|z|x|c|v|b|n|m|Q|W|E|R|T|Y|U|I|O|P|A|S|D|F|G|H|J|K|L|Z|X|C|V|B|N|M|1|2|3|4|5|6|7|8|9|0| )*\'').generate_automaton()
+
 
 	# OP
 	add = Automaton(['p', 'q', 'M'], ['+'], {'p': {'+': ['q']},'q': {'+': ['M']},'M': {'+': ['M']}}, 'p', ['q'])
@@ -69,8 +82,6 @@ def gen_lex():
 	colon = RE(':').generate_automaton()
 
 
-	# pr = grampro | rav | ginbe | ned | rof | od | fi | enth | seel | adre | tewri
-	# declvar = tegerin | leanboo | ingstr | tegerin_arr | leanboo_arr | ingstr_arr
 	# const = etru | sefal | _ | a | aa | aaa | aaaa | aaaaa | aaaaaa | aaaaaaa | aaaaaaaa | aaaaaaaaa | string
 	# op = add | sub | div | mul | ro | nad | ton | grt | lst | neq | eq | ass# | tesquo
 	# ids = di
@@ -87,20 +98,22 @@ def gen_lex():
 	# print()
 	# print()
 
-	pr = fi | enth
+	# pr = fi | enth
 	ids = di
 	sep = space | semicolon
 	op = ass | add | grt
 	const = a
 
 
-	pr = pr.minimize()
+	# pr = pr.minimize()
+	# print('asas', pr)
 	# declvar = declvar.minimize().beautify()
 	const = const.minimize()
 	op = op.minimize()
 	ids = ids.minimize()
 	sep = sep.minimize()
 
+	print(sep)
 	# print(((const | ids | op).determinize() | pr | sep).determinize())
 
 	lex = ((const | ids | op).determinize() | pr | sep).determinize()# | declvar 
@@ -115,5 +128,5 @@ def analyze(src):
 	print(program)
 	print(lex.analyze(program))
 
-# gen_lex()
-analyze('caspal/test.csp')
+gen_lex()
+# analyze('caspal/test.csp')
