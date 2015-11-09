@@ -5,6 +5,13 @@ def read_file(src):
 	with open(src) as f:
 		return f.read().splitlines()
 
+def write_file(src, content):
+	with open(src, 'w') as f:
+		for item in content:
+			line = '<'+', '.join(item)+'>\n'
+			# line = line
+			f.write(line)
+
 def open_file(src):
 	with open(src) as f:
 		json_file = json.load(f)

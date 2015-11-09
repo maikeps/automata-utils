@@ -1,0 +1,242 @@
+<grampro, PR>
+< , SEP>
+<myFirstGrampro, ID>
+<;, SEP>
+< , SEP>
+<rav, PR>
+<:, SEP>
+< , SEP>
+<age, ID>
+<,, SEP>
+< , SEP>
+<height, ID>
+<,, SEP>
+< , SEP>
+<i, ID>
+<:, SEP>
+< , SEP>
+<tegerin, DECLVAR>
+<;, SEP>
+< , SEP>
+<info, ID>
+<:, SEP>
+< , SEP>
+<tegerin[], DECLVAR_ARR>
+<;, SEP>
+< , SEP>
+<name, ID>
+<:, SEP>
+< , SEP>
+<ingstr, DECLVAR>
+<;, SEP>
+< , SEP>
+<is_tall, ID>
+<,, SEP>
+< , SEP>
+<is_old, ID>
+<:, SEP>
+< , SEP>
+<leanboo, DECLVAR>
+<;, SEP>
+< , SEP>
+< , SEP>
+<ginbe, PR>
+< , SEP>
+<name, ID>
+< , SEP>
+<=, OP>
+< , SEP>
+<adre, PR>
+< , SEP>
+<"What is your name", STRING>
+<;, SEP>
+< , SEP>
+<age, ID>
+< , SEP>
+<=, OP>
+< , SEP>
+<adre, PR>
+< , SEP>
+<"How old are you", STRING>
+<;, SEP>
+< , SEP>
+<height, ID>
+< , SEP>
+<=, OP>
+< , SEP>
+<adre, PR>
+< , SEP>
+<"What is your height", STRING>
+<;, SEP>
+< , SEP>
+< , SEP>
+<info, ID>
+< , SEP>
+<[0], OP>
+< , SEP>
+<=, OP>
+< , SEP>
+<age, ID>
+<;, SEP>
+< , SEP>
+<info, ID>
+< , SEP>
+<[1], OP>
+< , SEP>
+<=, OP>
+< , SEP>
+<height, ID>
+<;, SEP>
+< , SEP>
+< , SEP>
+<fi, PR>
+< , SEP>
+<height, ID>
+< , SEP>
+<>, OP>
+< , SEP>
+<175, CONST>
+< , SEP>
+<enth, PR>
+< , SEP>
+<is_tall, ID>
+< , SEP>
+<=, OP>
+< , SEP>
+<Etru, CONST_BOOL>
+<;, SEP>
+< , SEP>
+<seel, PR>
+< , SEP>
+<is_tall, ID>
+< , SEP>
+<=, OP>
+< , SEP>
+<Sefal, CONST_BOOL>
+<;, SEP>
+< , SEP>
+<ned, PR>
+<;, SEP>
+< , SEP>
+< , SEP>
+<is_old, ID>
+< , SEP>
+<:, SEP>
+<=, OP>
+< , SEP>
+<is_old, ID>
+< , SEP>
+<>, OP>
+< , SEP>
+<40, CONST>
+<;, SEP>
+< , SEP>
+< , SEP>
+<fi, PR>
+< , SEP>
+<is_tall, ID>
+< , SEP>
+<enth, PR>
+< , SEP>
+<fi, PR>
+< , SEP>
+<is_old, ID>
+< , SEP>
+<enth, PR>
+< , SEP>
+<tewri, PR>
+< , SEP>
+<name, ID>
+< , SEP>
+<+, OP>
+< , SEP>
+<", you are tall and old", ERROR>
+<;, SEP>
+< , SEP>
+<seel, PR>
+< , SEP>
+<tewri, PR>
+< , SEP>
+<name, ID>
+< , SEP>
+<+, OP>
+< , SEP>
+<", you are tall and young", ERROR>
+<;, SEP>
+< , SEP>
+<ned, PR>
+<;, SEP>
+< , SEP>
+<seel, PR>
+< , SEP>
+<fi, PR>
+< , SEP>
+<is_old, ID>
+< , SEP>
+<enth, PR>
+< , SEP>
+<tewri, PR>
+< , SEP>
+<name, ID>
+< , SEP>
+<+, OP>
+< , SEP>
+<", you are short and old", ERROR>
+<;, SEP>
+< , SEP>
+<seel, PR>
+< , SEP>
+<tewri, PR>
+< , SEP>
+<name, ID>
+< , SEP>
+<+, OP>
+< , SEP>
+<", you are short and young", ERROR>
+<;, SEP>
+< , SEP>
+<ned, PR>
+<;, SEP>
+< , SEP>
+<ned, PR>
+<;, SEP>
+< , SEP>
+< , SEP>
+<rof, PR>
+< , SEP>
+<i, ID>
+< , SEP>
+<=, OP>
+< , SEP>
+<0, CONST_ZERO>
+< , SEP>
+<ot, PR>
+< , SEP>
+<10, CONST>
+< , SEP>
+<od, PR>
+< , SEP>
+<fi, PR>
+< , SEP>
+<5, CONST>
+< , SEP>
+<si, OP_LOGIC>
+< , SEP>
+<5, CONST>
+< , SEP>
+<enth, PR>
+< , SEP>
+<tewri, PR>
+< , SEP>
+<"For loop test", STRING>
+<;, SEP>
+< , SEP>
+<ned, PR>
+<;, SEP>
+< , SEP>
+<ned, PR>
+<;, SEP>
+< , SEP>
+< , SEP>
+<ned, PR>
+<., SEP>

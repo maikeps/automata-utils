@@ -1,0 +1,44 @@
+grampro myFirstGrampro;
+rav:
+age, height, i: tegerin;
+info: tegerin[];
+name: ingstr;
+is_tall, is_old: leanboo;
+
+ginbe
+name = adre "What is your name";
+age = adre "How old are you";
+height = adre "What is your height";
+
+info [0] = age;
+info [1] = height;
+
+fi height > 175 enth
+is_tall = Etru;
+seel
+is_tall = Sefal;
+ned;
+
+is_old := is_old > 40;
+
+fi is_tall enth
+fi is_old enth
+tewri name + ", you are tall and old";
+seel
+tewri name + ", you are tall and young";
+ned;
+seel
+fi is_old enth
+tewri name + ", you are short and old";
+seel
+tewri name + ", you are short and young";
+ned;
+ned;
+
+rof i = 0 ot 10 od
+fi 5 si 5 enth
+tewri "For loop test";
+ned;
+ned;
+
+ned.

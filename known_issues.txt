@@ -1,0 +1,19 @@
+Known Issues
+
+Array access:
+a: tegerin[]
+a [i]
+
+Note the space between a and [i].
+Also, the only acceptable way to access an array is to use constants inside the
+brackets. The correct way to do this is to accept IDs and Strings.
+
+
+String:
+Strings in Caspal may only have lower and upper case letters, numbers and spaces.
+Also, they have to be between double quotes.
+
+
+Functions/Methods:
+It is impossible to use/declare any function/method, due to the inexistence of
+the simbols '(' and ')'.
