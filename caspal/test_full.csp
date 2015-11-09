@@ -1,8 +1,0 @@
-grampro name;
-rav
-	aux_a, aux_b: tegerin;
-
-ginbe
-	aux_a = 6;
-	aux_b = aux_a * 10;
-ned.

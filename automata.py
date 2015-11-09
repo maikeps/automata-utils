@@ -133,18 +133,18 @@ class Automaton:
 
 		# Adds the calculated closure to the new transition table
 		# Note: add_state is responsible for adding the remaining states
-		new_final_states = []
-		self.add_state(initial_closure, self.transition, new_transition)
+		new_accept_states = []
+		self.add_state(initial_closure, self.transition, new_transition, self.accept_states, new_accept_states)
 
 		# Sets the remaining variables to form an Automaton
 		new_states = [key for key in new_transition]
 		
 		# Build the accept states array
-		new_accept_states = []
-		for state in new_transition:
-			for final_state in self.accept_states:
-				if final_state in state and state not in new_accept_states and len(state) == len(final_state):
-					new_accept_states.append(state)
+		# new_accept_states = []
+		# for state in new_transition:
+		# 	for final_state in self.accept_states:
+		# 		if final_state in state and state not in new_accept_states and len(state) == len(final_state):
+		# 			new_accept_states.append(state)
 
 		# Create and return the automaton
 		return Automaton(new_states, self.alphabet,	new_transition,	''.join(sorted(initial_closure)), new_accept_states).beautify()
@@ -183,7 +183,7 @@ class Automaton:
 			if count == 0:
 				return closure
 
-	def add_state(self, new_state_arr, transition, new_transition):
+	def add_state(self, new_state_arr, transition, new_transition, accept_states, new_accept_states):
 		"""
 		Adds recursively a new state to the new transition
 		Based on the existing transition
@@ -192,6 +192,11 @@ class Automaton:
 		# Creates a name for the new state
 		new_state_arr = sorted(new_state_arr)
 		new_state_name = ''.join(new_state_arr)
+
+		# Adds to the accept_states array if it will be an accept state
+		for state in new_state_arr:
+			if state in accept_states:
+				new_accept_states.append(new_state_name)
 
 		# print(transition.keys(), self.accept_states, new_transition.keys(), new_final_states)
 		# for state in transition.keys():
@@ -225,9 +230,9 @@ class Automaton:
 			name = ''.join(sort)
 			new_transition[new_state_name][input_aux] = [name]
 
-			# If it's a non existin state in the transition, adds it
+			# If it's a non existing state in the transition, adds it
 			if name not in new_transition:
-				self.add_state(sort, transition, new_transition)
+				self.add_state(sort, transition, new_transition, accept_states, new_accept_states)
 
 	def union(self, other):
 		alphabet = list(set(self.alphabet) | set(other.alphabet))
@@ -285,89 +290,6 @@ class Automaton:
 		states = [state for state in self_transition]
 
 		return Automaton(states, alphabet, self_transition, initial_state, accept_states)
-
-	def union_old(self, other, det=True):
-		"""
-		Generates the union between this and the other automaton.
-		"""
-		# self_deterministic = self.determinize()
-		self_deterministic = self
-		self_transition = copy.deepcopy(self_deterministic.transition)
-		# other_deterministic = other.determinize()
-		other_deterministic = other
-		other_transition = copy.deepcopy(other_deterministic.transition)
-
-		new_transition = {}
-		new_initial_state = 'qi'
-		new_accept_states = ['qf']
-		new_alphabet = list(set(self_deterministic.alphabet) | set(other_deterministic.alphabet))
-
-		name_map = {}
-
-		# Rename states in other automaton to prevent name conflicts
-		for state in other_transition:
-			if state != 'M':
-				new_name = state
-				count = 1
-				while new_name == state:
-					new_name = state+str(count)
-					count += 1
-				name_map[state] = new_name
-
-		name_map['M'] = 'M'
-
-		new_transition['qi'] = {}
-		new_transition['qi'] = {'&': [self_deterministic.initial_state, name_map[other_deterministic.initial_state]]}
-
-		# Add dead and final states
-		new_transition['M'] = {}
-		new_transition['qf'] = {}
-		for char in new_alphabet:
-			# for state in name_map:
-			# 	# if state[0] == 'M':
-			new_transition['M'][char] = ['M']
-			new_transition['qf'][char] = ['M']
-
-		# Add self transitions to the new transition table
-		for state in self_transition:
-			if state is not 'M':
-				new_transition[state] = {}
-				for char in self_transition[state]:
-					new_transition[state][char] = self_transition[state][char]
-
-		# Add other transitions to the new transition table
-		for state in other_transition:
-			if state is not 'M':
-				new_transition[name_map[state]] = {}
-				for char in other_transition[state]:
-					new_transition[name_map[state]][char] = [name_map[other_transition[state][char][0]]]
-
-		# Add missing transitions
-		for state in new_transition:
-			for char in new_alphabet:
-				if char not in new_transition[state]:
-					new_transition[state][char] = ['M']
-
-		# Add accept state transition
-		# if det:
-		# 	for state in self_transition:
-		# 		if state in self_deterministic.accept_states:
-		# 			new_transition[state]['&'] = ['qf']
-		# 	for state in other_transition:
-		# 		if state in other_deterministic.accept_states:
-		# 			new_transition[name_map[state]]['&'] = ['qf']
-		# else:
-		new_accept_states = list(set(self.accept_states) | set(other.accept_states))
-
-
-
-		new_states = [state for state in new_transition]
-
-		union_automaton = Automaton(new_states, new_alphabet, new_transition, new_initial_state, new_accept_states)
-		# if det:
-		# 	return union_automaton.determinize().beautify()
-		# else:
-		return union_automaton
 
 	def concat(self, other):
 		"""
@@ -450,9 +372,6 @@ class Automaton:
 		name_map = {}
 		name_map[self.initial_state] = 'q0'
 
-		# for state in self.states:
-		# 	if state[0] == 'M':
-		# 		name_map[state] = 'M'
 		name_map['M'] = 'M'
 
 		for state in self.transition:
@@ -464,7 +383,6 @@ class Automaton:
 			for char in self.transition[state]:
 				states = []
 				for item in self.transition[state][char]:
-					# print(name_map)
 					states.append(name_map[item])
 
 				new_transition[name_map[state]][char] = states
@@ -679,64 +597,206 @@ class Automaton:
 
 		return Automaton(states, self.alphabet, transition, initial_state, accept_states).beautify()
 
-	def find_equivalences(self, automaton):		
+	def find_equivalences(self, automaton):	
 		f = automaton.accept_states
 		kf = list(set(automaton.states)-set(f))
 		# f = automaton.accept_states
 		# kf = list(set(automaton.transition.keys())-set(f))
+
 		eq = [f, kf]
 		new_eq = []
+		unitary = []
+
+		# while True:
+		# 	for eq_class in eq:
+		# 		if len(eq_class) == 1:
+		# 			new_eq.append(eq_class)
+		# 			unitary.append(eq_class)
+		# 		else:
+		# 			new_eq.append([eq_class[0]])
+		# 			for state in eq_class[1:]:
+		# 				for i in range(len(new_eq)):
+		# 					new_eq_class = new_eq[i]
+		# 					if new_eq_class not in unitary:
+		# 						compare = new_eq_class[0]
+		# 						is_eq = True
+		# 						for char in automaton.alphabet:
+		# 							state_next = automaton.transition[state][char]
+		# 							compare_next = automaton.transition[compare][char]
+
+		# 							state_next_eq_class = []
+		# 							for item in eq:
+		# 								if state_next in item:
+		# 									state_next_eq_class = item
+		# 									break
+
+		# 							compare_next_eq_class = []
+		# 							for item in eq:
+		# 								if compare_next in item:
+		# 									compare_next_eq_class = item
+		# 									break
+
+		# 							if state_next_eq_class != compare_next_eq_class:
+		# 								is_eq = False
+		# 								break
+
+		# 						if is_eq:
+		# 							new_eq_class.append(state)
+		# 							break
+		# 						elif i == len(new_eq)-1:
+		# 							new_eq.append([state])
+
+		# 	print(new_eq)
+
+
+		# 	if new_eq == eq:
+		# 		return eq
+
+		# 	eq = new_eq
+		# 	new_eq = []
+		# 	unitary = []
+
+			
+
+		# return eq
+
+
+
 
 		while True:
+			# For each equivalence class in the equivalence list
 			for eq_class in eq:
+				# If it is a unitary list and it has not yet been added,
+				# Then just add to the new equivalente list
 				if len(eq_class) == 1 and eq_class not in new_eq:
+					# Start out by adding the first item from the current class
+					# To a new equivalence class.
+					# The next items from the current class will be compared to this one.
+					unitary.append(eq_class)
 					new_eq.append(eq_class)
+				# Else, if the first element of the equivalente class hasn't yet been added,
+				# Add it
 				elif [eq_class[0]] not in new_eq:
-					# comp = eq_class[0]
 					new_eq.append([eq_class[0]])
+					# For each remaining state
 					for state in eq_class[1:]:
+						# Find out where to put it
+						# First, iterate over the new equivalence list
 						for i in range(len(new_eq)):
-						# for new_eq_class in new_eq:
 							new_eq_class = new_eq[i]
-							comp = new_eq_class[0]
-							
-							if state != comp:
-								is_eq = True
-								for char in self.alphabet:
-									state_next = automaton.transition[state][char][0]
-									comp_next = automaton.transition[comp][char][0]
+							# if len(eq[eq.index(new_eq_class)]) > 1:
+							if new_eq_class not in unitary:
+								# Select one item to be compared to
+								compare = new_eq_class[0]
 
-									state_next_eq_class = []
-									for item in eq:
-										if state_next in item:
-											state_next_eq_class = item
+								# If they are different, start out by considering both are equivalent
+								if state != compare:
+									is_eq = True
+
+									# Here, we will check if they are really equivalent
+									for char in automaton.alphabet:
+										# Get where each state goes through char
+										state_next = automaton.transition[state][char][0]
+										compare_next = automaton.transition[compare][char][0]
+
+										# Search for which equivalence class each next state belongs to
+										state_next_eq_class = []
+										for item in eq:
+											if state_next in item:
+												state_next_eq_class = item
+												break
+
+										compare_next_eq_class = []
+										for item in eq:
+											if compare_next in item:
+												compare_next_eq_class = item
+												break
+										
+
+										# If both equivalence classes are different,
+										# Then set is_eq to false and stop checking
+										if state_next_eq_class != compare_next_eq_class:
+											is_eq = False
 											break
 
-									comp_next_eq_class = []
-									for item in eq:
-										if comp_next in item:
-											comp_next_eq_class = item
+									# If, after all checks both are equivalent,
+									# Add state to the equivalence class.
+									# If not, check if we are checking the last equivalence class.
+									# If we are, then add it to the new equivalence class as a unitary list.
+									# If we are not at the last equivalence class,
+									# Just keep looking. (Next for iteration)
+									if is_eq:
+										if (new_eq_class[0] in f and state in f) or (new_eq_class[0] in kf and state in kf): 
+											new_eq_class.append(state)
 											break
-
-
-									if state_next_eq_class != comp_next_eq_class:
-										is_eq = False
-										break
-
-
-								# print('ksdndkjsvfkdsjnds', eq)
-								if is_eq:
-									if (new_eq_class[0] in f and state in f) or (new_eq_class[0] in kf and state in kf): 
-										new_eq_class.append(state)
-								elif i == len(new_eq)-1:
-									if [state] not in new_eq:
+									elif i == len(new_eq)-1:
 										new_eq.append([state])
+
+			# If, after all comparissions, nothing changed,
+			# Then return the final equivalence class.
+
+
 
 			if new_eq == eq:
 				return eq
 
+			# If not, set the current equivalence class as the newly created one
+			# And reset the newly created.
 			eq = new_eq
 			new_eq = []
+			unitary = []
+							
+
+
+			# for eq_class in eq:
+			# 	if len(eq_class) == 1 and eq_class not in new_eq:
+			# 		new_eq.append(eq_class)
+			# 	elif [eq_class[0]] not in new_eq:
+			# 		# comp = eq_class[0]
+			# 		new_eq.append([eq_class[0]])
+			# 		for state in eq_class[1:]:
+			# 			for i in range(len(new_eq)):
+			# 			# for new_eq_class in new_eq:
+			# 				new_eq_class = new_eq[i]
+			# 				comp = new_eq_class[0]
+							
+			# 				if state != comp:
+			# 					is_eq = True
+			# 					for char in self.alphabet:
+			# 						state_next = automaton.transition[state][char][0]
+			# 						comp_next = automaton.transition[comp][char][0]
+
+			# 						state_next_eq_class = []
+			# 						for item in eq:
+			# 							if state_next in item:
+			# 								state_next_eq_class = item
+			# 								break
+
+			# 						comp_next_eq_class = []
+			# 						for item in eq:
+			# 							if comp_next in item:
+			# 								comp_next_eq_class = item
+			# 								break
+
+
+			# 						if state_next_eq_class != comp_next_eq_class:
+			# 							is_eq = False
+			# 							break
+
+
+			# 					# print('ksdndkjsvfkdsjnds', eq)
+			# 					if is_eq:
+			# 						if (new_eq_class[0] in f and state in f) or (new_eq_class[0] in kf and state in kf): 
+			# 							new_eq_class.append(state)
+			# 					elif i == len(new_eq)-1:
+			# 						if [state] not in new_eq:
+			# 							new_eq.append([state])
+
+			# if new_eq == eq:
+			# 	return eq
+
+			# eq = new_eq
+			# new_eq = []
 
 	def remove_unreachable(self):
 		reached_states = [self.initial_state]
@@ -775,32 +835,36 @@ class Automaton:
 
 		tokens = []
 
+
 		word = ''
+		found_quotes = False
 		for char in program:
-			# print(char, word)
 			prev_state = self.current_states[0]
 			next_state = self.change_state(self.current_states, char)
 
 			single = self.analyze_single(char)
-			if single[1] == 'SEP':
-				tokens.append((word, prev_state))
+			if char == '"':
+				if not found_quotes:
+					found_quotes = True
+					word += char
+				else:
+					found_quotes = False
+					tokens.append((word+char, next_state[0]))
+
+					word = ''
+					self.reset()
+			elif single[1] == 'SEP' and not found_quotes:
+				if prev_state[0] == 'q':
+					if prev_state in self.accept_states:
+						tokens.append((word, 'ID'))
+				else:
+					tokens.append((word, prev_state))
 				tokens.append(single)
 
 				word = ''
 				self.reset()
 			else:
 				word += char
-
-			# if next_state == ['M']:
-			# 	tokens.append((word, prev_state))
-			# 	word = char
-			# 	self.reset()
-			# 	prev_state = self.current_states[0]
-			# 	next_state = self.change_state(self.current_states, char)
-			# else:
-			# 	word += char
-			
-		# tokens.append((word, self.current_states[0]))
 
 		return tokens
 
@@ -1073,7 +1137,6 @@ class RegularExpression:
 							automaton_aux = automaton_aux + sub_automaton
 						else:
 							automaton = automaton + sub_automaton
-							print('>>>>>>>>>>>>>.', sub_automaton)
 
 						# Finally, remove the reference to the opening scope from the stack
 						del open_stack[-1]
@@ -1116,7 +1179,6 @@ class RegularExpression:
 				if union_pending:
 					automaton = automaton | automaton_aux
 
-				print(automaton)
 				return automaton.determinize().beautify()
 
 			# Increment the index counter

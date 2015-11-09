@@ -4,7 +4,6 @@ from automata import Automaton
 import reader
 
 def gen_lex():
-
 	# PR
 	grampro = RE('grampro').generate_automaton()
 	rav = RE('rav').generate_automaton()
@@ -18,47 +17,40 @@ def gen_lex():
 	adre = RE('adre').generate_automaton()
 	tewri = RE('tewri').generate_automaton()
 
-	# pr = grampro | rav | ginbe | ned | rof | od | fi | enth | seel | adre | tewri
-	# pr = (grampro | rav | ginbe ).determinize() | ned | rof).determinize() | od | fi).determinize() | enth | seel).determinize() | adre | tewri).determinize()
 	pr = (grampro | rav | ginbe).determinize()
 	pr = (pr | ned | rof).determinize()
 	pr = (pr | od | fi).determinize()
 	pr = (pr | enth | seel).determinize()
 	pr = (pr | adre | tewri).determinize()
-	# pr = (grampro | rav).determinize()
-	# print(pr.accept_states)
 	pr = pr.minimize()
 
-	# print(pr.accept_states)
-	# print(pr)
-	# reader.save_file('caspal/pr', pr)
+	print('Created PR')
 
-	# print(pr)
+
 	# DeclVar
-	tegerin = RE('tegerin').generate_automaton()
-	leanboo = RE('leanboo').generate_automaton()
-	ingstr = RE('ingstr').generate_automaton()
-	tegerin_arr = RE('tegerin[]').generate_automaton()
-	leanboo_arr = RE('leanboo[]').generate_automaton()
-	ingstr_arr = RE('ingstr[]').generate_automaton()
+	tegerin = RE('tegerin([])*').generate_automaton()
+	leanboo = RE('leanboo([])*').generate_automaton()
+	ingstr = RE('ingstr([])*').generate_automaton()
+	
+	declvar = (tegerin | leanboo).determinize()
+	declvar = (declvar | ingstr).determinize()
+	declvar = declvar.minimize()
 
-	# declvar = tegerin | leanboo | ingstr | tegerin_arr | leanboo_arr | ingstr_arr
+	print('Created DECLVAR')
 
 
 	# CONST
 	etru = RE('etru').generate_automaton()
 	sefal = RE('sefal').generate_automaton()
-	_ = RE('0').generate_automaton()
-	a = RE('1').generate_automaton()
-	aa = RE('2').generate_automaton()
-	aaa = RE('3').generate_automaton()
-	aaaa = RE('4').generate_automaton()
-	aaaaa = RE('5').generate_automaton()
-	aaaaaa = RE('6').generate_automaton()
-	aaaaaaa = RE('7').generate_automaton()
-	aaaaaaaa = RE('8').generate_automaton()
-	aaaaaaaaa = RE('9').generate_automaton()
-	string = RE('\'(q|w|e|r|t|y|u|i|o|p|a|s|d|f|g|h|j|k|l|z|x|c|v|b|n|m|Q|W|E|R|T|Y|U|I|O|P|A|S|D|F|G|H|J|K|L|Z|X|C|V|B|N|M|1|2|3|4|5|6|7|8|9|0| )*\'').generate_automaton()
+	numbas = RE('(0|1|2|3|4|5|6|7|8|9)(0|1|2|3|4|5|6|7|8|9|0)*').generate_automaton()
+	string = RE('"(q|w|e|r|t|y|u|i|o|p|a|s|d|f|g|h|j|k|l|z|x|c|v|b|n|m|Q|W|E|R|T|Y|U|I|O|P|A|S|D|F|G|H|J|K|L|Z|X|C|V|B|N|M|1|2|3|4|5|6|7|8|9|0| )*"').generate_automaton()
+
+	const = (etru | sefal).determinize()
+	const = (const | numbas).determinize()
+	const = (const | string).determinize()
+	const = const.minimize()
+
+	print('Created CONST')
 
 
 	# OP
@@ -74,13 +66,31 @@ def gen_lex():
 	neq = RE('!=').generate_automaton()
 	eq = RE('==').generate_automaton()
 	ass = RE('=').generate_automaton()
-	# # tesquo = RE('\'').generate_automaton()
 
+	op = (add | sub).determinize()
+	op = (op | div).determinize()
+	op = (op | mul).determinize()
+	op = (op | ro).determinize()
+	op = (op | nad).determinize()
+	op = (op | ton).determinize()
+	op = (op | grt).determinize()
+	op = (op | lst).determinize()
+	op = (op | neq).determinize()
+	op = (op | eq).determinize()
+	op = (op | ass).determinize()
+	op = op.minimize()
+
+	print('Created OP')
+
+	
 	# ID
-	# di = RE('(q|w|e|r|t|y|u|i|o|p|a|s|d|f|g|h|j|k|l|z|x|c|v|b|n|m|Q|W|E|R|T|Y|U|I|O|P|A|S|D|F|G|H|J|K|L|Z|X|C|V|B|N|M|_)(q|w|e|r|t|y|u|i|o|p|a|s|d|f|g|h|j|k|l|z|x|c|v|b|n|m|Q|W|E|R|T|Y|U|I|O|P|A|S|D|F|G|H|J|K|L|Z|X|C|V|B|N|M|_|1|2|3|4|5|6|7|8|9|0)*').generate_automaton()
-	di = RE('(a|b)*').generate_automaton()
-	print(di)
+	di = RE('(q|w|e|r|t|y|u|i|o|p|a|s|d|f|g|h|j|k|l|z|x|c|v|b|n|m|Q|W|E|R|T|Y|U|I|O|P|A|S|D|F|G|H|J|K|L|Z|X|C|V|B|N|M|_)(q|w|e|r|t|y|u|i|o|p|a|s|d|f|g|h|j|k|l|z|x|c|v|b|n|m|Q|W|E|R|T|Y|U|I|O|P|A|S|D|F|G|H|J|K|L|Z|X|C|V|B|N|M|_|1|2|3|4|5|6|7|8|9|0)*').generate_automaton()
+	
+	ids = di.minimize()
 
+	print('Created ID')
+
+	
 	# SEP
 	space = RE(' ').generate_automaton()
 	semicolon = RE(';').generate_automaton()
@@ -88,49 +98,21 @@ def gen_lex():
 	comma = RE(',').generate_automaton()
 	colon = RE(':').generate_automaton()
 
-
-	# const = etru | sefal | _ | a | aa | aaa | aaaa | aaaaa | aaaaaa | aaaaaaa | aaaaaaaa | aaaaaaaaa | string
-	# op = add | sub | div | mul | ro | nad | ton | grt | lst | neq | eq | ass# | tesquo
-	# ids = di
-	# sep = space | semicolon | dot | comma | colon
-
-	# print('fi')
-	# print(fi)
-	# print()
-	# print('enth')
-	# print(enth)
-	# print()
-	# print('di')
-	# print(di)
-	# print()
-	# print()
-
-	# pr = fi | enth
-	ids = di
-	sep = space | semicolon | dot
-	op = ass | add | grt
-	const = a
-	declvar = tegerin
-
-
-	# pr = pr.minimize()
-	# print('asas', pr)
-	# declvar = declvar.minimize().beautify()
-	const = const.minimize()
-	op = op.minimize()
-	ids = ids.minimize()
+	sep = (space | semicolon).determinize()
+	sep = (sep | dot).determinize()
+	sep = (sep | comma).determinize()
+	sep = (sep | colon).determinize()
 	sep = sep.minimize()
-	declvar = declvar.minimize()
 
-	# print(sep)
-	# print(((const | ids | op).determinize() | pr | sep).determinize())
+	print('Created SEP')
 
-	lex = (((const | ids | op).determinize() | pr | sep).determinize() | declvar).determinize()
+	lex = (const | op).determinize()
+	lex = (lex | pr).determinize()
+	lex = (lex | sep).determinize()
+	lex = (lex | declvar).determinize()
+	lex = (lex | ids).determinize()
+
 	lex = rename(lex)
-
-
-	# lex = pr.union(op, True).union(ids, True).union(sep, True).union(const, True)# | declvar 
-	# lex = pr | declvar | const | op | ids | sep
 
 	reader.save_file('caspal/lex', lex)
 	
@@ -162,7 +144,7 @@ def rename(automaton):
 
 	
 	# OP
-	automaton.verify_word('=')
+	automaton.verify_word('+')
 	accept_state = automaton.current_states[0]
 
 	for state in automaton.transition:
@@ -237,7 +219,7 @@ def rename(automaton):
 	automaton.states.remove(accept_state)
 
 	
-	# CONST
+	# CONST - Numbers
 	automaton.verify_word('1')
 	accept_state = automaton.current_states[0]
 
@@ -256,8 +238,40 @@ def rename(automaton):
 	automaton.states.remove(accept_state)
 
 
+	# CONST - String
+	automaton.verify_word('"foo"')
+	accept_state = automaton.current_states[0]
+
+	for state in automaton.transition:
+		for char in automaton.transition[state]:
+			if accept_state in automaton.transition[state][char]:
+				automaton.transition[state][char] = ['CONST_STR']
+
+	automaton.transition['CONST_STR'] = automaton.transition[accept_state]
+	del automaton.transition[accept_state]
+
+	automaton.accept_states.append('CONST_STR')
+	automaton.accept_states.remove(accept_state)
+
+	automaton.states.append('CONST_STR')
+	automaton.states.remove(accept_state)
+
+
+	# ERROR
+	for state in automaton.transition:
+		for char in automaton.transition[state]:
+			if 'M' in automaton.transition[state][char]:
+				automaton.transition[state][char] = ['ERROR']
+
+	automaton.transition['ERROR'] = automaton.transition['M']
+	del automaton.transition['M']
+
+	automaton.states.append('ERROR')
+	automaton.states.remove('M')
+
+
 	return automaton
 
+
 gen_lex()
-analyze('caspal/test.csp')
-# di = RE('(a|b)*').generate_automaton()
+analyze('caspal/test_full.csp')
