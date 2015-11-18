@@ -1,0 +1,42 @@
+{
+	"type": "grammar",
+	"start_symbol": "<S>",
+	"terminal": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "_", " ", "[", "]", "grampro", ";", "ginbe", "ned", ".", "rav", ":", ",", "tegerin", "leanboo", "ingstr", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ],
+	"nonterminal": [],
+	"production": {
+		"<S>": ["grampro <ID_PREFIX>; <S’>"],
+		"<S’>": ["ginbe <PROGRAM> ned.", "rav ‘\n’<RAV> ginbe <PROGRAM> ned."],
+		"<RAV>": ["<ID_LIST>: <DECLVAR> <RAV’>"],
+		"<RAV’>": ["‘\n’ <RAV>", "ε"],
+		"<ID_LIST>": ["<ID_PREFIX><ID_LIST’>"],
+		"<ID_LIST’>": [", <ID_LIST>", "ε"],
+		"<DECLVAR>": ["tegerin<ARR> ", "leanboo<ARR> ", "ingstr<ARR>"],
+		"<ARR>": ["[]<ARR>", "ε"],
+		"<OFFSET_ARR>": ["[<NUMBERS>]"],
+		"<ID>": ["<ID_PREFIX><ID’>"],
+		"<ID’>": [" [<NUMBERS>]", "ε"],
+		###################################
+		"<ID_PREFIX>": ["a<ID_SUFFIX>", "b<ID_SUFFIX>", "c<ID_SUFFIX>", "d<ID_SUFFIX>", "e<ID_SUFFIX>", "f<ID_SUFFIX>", "g<ID_SUFFIX>", "h<ID_SUFFIX>", "i<ID_SUFFIX>", "j<ID_SUFFIX>", "k<ID_SUFFIX>", "l<ID_SUFFIX>", "m<ID_SUFFIX>", "n<ID_SUFFIX>", "o<ID_SUFFIX>", "p<ID_SUFFIX>", "q<ID_SUFFIX>", "r<ID_SUFFIX>", "s<ID_SUFFIX>", "t<ID_SUFFIX>", "u<ID_SUFFIX>", "v<ID_SUFFIX>", "w<ID_SUFFIX>", "x<ID_SUFFIX>", "y<ID_SUFFIX>", "z<ID_SUFFIX>", "A<ID_SUFFIX>", "B<ID_SUFFIX>", "C<ID_SUFFIX>", "D<ID_SUFFIX>", "E<ID_SUFFIX>", "F<ID_SUFFIX>", "G<ID_SUFFIX>", "H<ID_SUFFIX>", "I<ID_SUFFIX>", "J<ID_SUFFIX>", "K<ID_SUFFIX>", "L<ID_SUFFIX>", "M<ID_SUFFIX>", "N<ID_SUFFIX>", "O<ID_SUFFIX>", "P<ID_SUFFIX>", "Q<ID_SUFFIX>", "R<ID_SUFFIX>", "S<ID_SUFFIX>", "T<ID_SUFFIX>", "U<ID_SUFFIX>", "V<ID_SUFFIX>", "W<ID_SUFFIX>", "X<ID_SUFFIX>", "Y<ID_SUFFIX>", "Z<ID_SUFFIX>", "_<ID_SUFFIX>"],
+		###################################
+		"<ID_SUFFIX>": ["a<ID_SUFFIX>", "b<ID_SUFFIX>", "c<ID_SUFFIX>", "d<ID_SUFFIX>", "e<ID_SUFFIX>", "f<ID_SUFFIX>", "g<ID_SUFFIX>", "h<ID_SUFFIX>", "i<ID_SUFFIX>", "j<ID_SUFFIX>", "k<ID_SUFFIX>", "l<ID_SUFFIX>", "m<ID_SUFFIX>", "n<ID_SUFFIX>", "o<ID_SUFFIX>", "p<ID_SUFFIX>", "q<ID_SUFFIX>", "r<ID_SUFFIX>", "s<ID_SUFFIX>", "t<ID_SUFFIX>", "u<ID_SUFFIX>", "v<ID_SUFFIX>", "w<ID_SUFFIX>", "x<ID_SUFFIX>", "y<ID_SUFFIX>", "z<ID_SUFFIX>", "A<ID_SUFFIX>", "B<ID_SUFFIX>", "C<ID_SUFFIX>", "D<ID_SUFFIX>", "E<ID_SUFFIX>", "F<ID_SUFFIX>", "G<ID_SUFFIX>", "H<ID_SUFFIX>", "I<ID_SUFFIX>", "J<ID_SUFFIX>", "K<ID_SUFFIX>", "L<ID_SUFFIX>", "M<ID_SUFFIX>", "N<ID_SUFFIX>", "O<ID_SUFFIX>", "P<ID_SUFFIX>", "Q<ID_SUFFIX>", "R<ID_SUFFIX>", "S<ID_SUFFIX>", "T<ID_SUFFIX>", "U<ID_SUFFIX>", "V<ID_SUFFIX>", "W<ID_SUFFIX>", "X<ID_SUFFIX>", "Y<ID_SUFFIX>", "Z<ID_SUFFIX>", "0<ID_SUFFIX>", "1<ID_SUFFIX>", "2<ID_SUFFIX>", "3<ID_SUFFIX>", "4<ID_SUFFIX>", "5<ID_SUFFIX>", "6<ID_SUFFIX>", "7<ID_SUFFIX>", "8<ID_SUFFIX>", "9<ID_SUFFIX>", "_<ID_SUFFIX>"],
+		"<PROGRAM>": ["<ID> := <PROGRAM’>", "<LOOP>", "<COND>", "tewri <IO’>", "ε"],
+		"<PROGRAM’>": ["<ATTR’>’ \n’ <PROGRAM>", "adre <STR_QUOTES>;’\n’ <PROGRAM>"],
+		"<ATTR>": ["<ID> := <ATTR’>"],
+		"<ATTR’>": ["<EXP>;", "<STR_QUOTES>;"],
+		"<EXP>": ["<ID><EXP’>", "<CONST><EXP’>", "ton <EXP><EXP’>"],
+		"<EXP’>": [" <OP> <EXP><EXP’>", "ε"],
+		"<OP>": ["+", "-", "*", "/", ">", "<", "si", "!=", "nad", "ro"],
+		"<CONST>": ["<INTEGER>", "<BOOLEAN>"],
+		"<INTEGER>": ["<NUMBERS>", "-<NUMBERS>"],
+		"<NUMBERS>": ["1<NUMBERS_SUFFIX>", "2<NUMBERS_SUFFIX>", "3<NUMBERS_SUFFIX>", "4<NUMBERS_SUFFIX>", "5<NUMBERS_SUFFIX>", "6<NUMBERS_SUFFIX>", "7<NUMBERS_SUFFIX>", "8<NUMBERS_SUFFIX>", "9<NUMBERS_SUFFIX>", "0"],
+		"<NUMBERS_SUFFIX>": ["0<NUMBERS_SUFFIX> 1<NUMBERS_SUFFIX>", "2<NUMBERS_SUFFIX>", "3<NUMBERS_SUFFIX>", "4<NUMBERS_SUFFIX>", "5<NUMBERS_SUFFIX>", "6<NUMBERS_SUFFIX>", "7<NUMBERS_SUFFIX>", "8<NUMBERS_SUFFIX>", "9<NUMBERS_SUFFIX>", "ε"],
+		"<BOOLEAN>": ["Sefal", "Etru"],
+		"<STR_QUOTES>": ["'<STRING>'"],
+		"<STRING>": ["a<STRING>", "b<STRING>", "c<STRING>", "d<STRING>", "e<STRING>", "f<STRING>", "g<STRING>", "h<STRING>", "i<STRING>", "j<STRING>", "k<STRING>", "l<STRING>", "m<STRING>", "n<STRING>", "o<STRING>", "p<STRING>", "q<STRING>", "r<STRING>", "s<STRING>", "t<STRING>", "u<STRING>", "v<STRING>", "w<STRING>", "x<STRING>", "y<STRING>", "z<STRING>", "A<STRING>", "B<STRING>", "C<STRING>", "D<STRING>", "E<STRING>", "F<STRING>", "G<STRING>", "H<STRING>", "I<STRING>", "J<STRING>", "K<STRING>", "L<STRING>", "M<STRING>", "N<STRING>", "O<STRING>", "P<STRING>", "Q<STRING>", "R<STRING>", "S<STRING>", "T<STRING>", "U<STRING>", "V<STRING>", "W<STRING>", "X<STRING>", "Y<STRING>", "Z<STRING>", "0<STRING>", "1<STRING>", "2<STRING>", "3<STRING>", "4<STRING>", "5<STRING>", "6<STRING>", "7<STRING>", "8<STRING>", "9<STRING>", "_<STRING>", " <STRING>", "ε"],
+		"<LOOP>": ["rof <ID> := <EXP> ot <INTEGER> od ‘\n’ ginbe <PROGRAM> ned; ’\n’ <PROGRAM>"],
+		"<COND>": ["fi <EXP> enth <PROGRAM><ELSE> ’\n’ <PROGRAM>"],
+		"<ELSE>": ["seel <PROGRAM> ned;", "ned;"],
+		"<IO>": ["tewri <IO’>", "<ID> := adre <STR_QUOTES>;’\n’ <PROGRAM>"],
+		"<IO’>": ["<EXP>;’\n’ <PROGRAM>", "'<STRING>';’\n’ <PROGRAM>"]
+	}
+}
