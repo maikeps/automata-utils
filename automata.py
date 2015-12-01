@@ -757,6 +757,7 @@ class Automaton:
 			else:
 				word += char
 
+		print(tokens)
 		return tokens
 
 	def analyze_single(self, char):

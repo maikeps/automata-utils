@@ -400,4 +400,4 @@ if __name__ == '__main__':
 	gen_lex()
 	args = sys.argv
 	program_src = args[1]
-	analyze(program_src)
+	print(analyze(program_src))

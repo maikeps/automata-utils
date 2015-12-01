@@ -1,10 +1,12 @@
 grampro name;
 rav
 aux_a, aux_b: tegerin;
-str: ingstr;
 
 ginbe
-str = "lalala teste"
 aux_a = 6;
-aux_b = aux_a * 10;
+aux_b = 10;
+fi aux_a > aux_b enth
+tewri aux_a
+seel
+tewri aux_b
 ned.

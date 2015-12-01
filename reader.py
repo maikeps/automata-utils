@@ -12,6 +12,11 @@ def write_file(src, content):
 			# line = line
 			f.write(line)
 
+def read_json(src):
+	with open(src) as f:
+		json_file = json.load(f)
+		return json_file
+
 def open_file(src):
 	with open(src) as f:
 		json_file = json.load(f)
